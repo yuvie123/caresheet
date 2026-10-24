@@ -1,0 +1,141 @@
+{
+  "transcript": [
+    {
+      "doc_index": 0,
+      "text": "FICTIONAL SAMPLE\nDischarge medications\nNEW: Ibuprofen 400 mg - take 1 tablet by mouth every 8 hours with food for 5 days.\nCONTINUE: Omeprazole 20 mg - take 1 capsule by mouth once daily before breakfast."
+    },
+    {
+      "doc_index": 1,
+      "text": "FICTIONAL BOTTLE LABEL\nAdvil Liqui-Gels 200 mg\nTake 2 capsules every 4 to 6 hours while symptoms persist."
+    }
+  ],
+  "medications": [
+    {
+      "name": "Ibuprofen",
+      "strength": "400 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "every 8 hours",
+      "times_per_day": 3,
+      "as_needed": false,
+      "slots": [
+        "morning",
+        "noon",
+        "evening"
+      ],
+      "with_food": "with_food",
+      "status": "new",
+      "duration_verbatim": "for 5 days",
+      "source_quote": "NEW: Ibuprofen 400 mg - take 1 tablet by mouth every 8 hours with food for 5 days.",
+      "source_doc": 0
+    },
+    {
+      "name": "Omeprazole",
+      "strength": "20 mg",
+      "dose_amount": 1,
+      "dose_unit": "capsule",
+      "frequency_verbatim": "once daily before breakfast",
+      "times_per_day": 1,
+      "as_needed": false,
+      "slots": [
+        "morning"
+      ],
+      "with_food": "empty_stomach",
+      "status": "continue",
+      "duration_verbatim": null,
+      "source_quote": "CONTINUE: Omeprazole 20 mg - take 1 capsule by mouth once daily before breakfast.",
+      "source_doc": 0
+    },
+    {
+      "name": "Advil Liqui-Gels",
+      "strength": "200 mg",
+      "dose_amount": 2,
+      "dose_unit": "capsule",
+      "frequency_verbatim": "every 4 to 6 hours while symptoms persist",
+      "times_per_day": null,
+      "as_needed": false,
+      "slots": [],
+      "with_food": "not_stated",
+      "status": "unclear",
+      "duration_verbatim": null,
+      "source_quote": "Advil Liqui-Gels 200 mg\nTake 2 capsules every 4 to 6 hours while symptoms persist.",
+      "source_doc": 1
+    }
+  ],
+  "ask_pharmacist": [
+    {
+      "kind": "duplicate",
+      "issue": "The Advil Liqui-Gels bottle appears to contain ibuprofen, the same drug as the discharge sheet's Ibuprofen 400 mg. Is it safe to take both, and which one should be used?",
+      "quotes": [
+        " Advil Liqui-Gels 200 mg",
+        "NEW: Ibuprofen 400 mg - take 1 tablet by mouth every 8 hours with food for 5 days."
+      ]
+    },
+    {
+      "kind": "mismatch",
+      "issue": "The bottle label directions (2 capsules of 200 mg every 4 to 6 hours) differ from the discharge sheet (400 mg every 8 hours for 5 days). Which directions should be followed?",
+      "quotes": [
+        "Take 2 capsules every 4 to 6 hours while symptoms persist.",
+        "take 1 tablet by mouth every 8 hours with food for 5 days"
+      ]
+    }
+  ],
+  "follow_ups": [],
+  "warning_signs": [],
+  "verified_medications": [
+    {
+      "name": "Ibuprofen",
+      "strength": "400 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "every 8 hours",
+      "times_per_day": 3,
+      "as_needed": false,
+      "slots": [
+        "morning",
+        "noon",
+        "evening"
+      ],
+      "with_food": "with_food",
+      "status": "new",
+      "duration_verbatim": "for 5 days",
+      "source_quote": "NEW: Ibuprofen 400 mg - take 1 tablet by mouth every 8 hours with food for 5 days.",
+      "source_doc": 0
+    },
+    {
+      "name": "Omeprazole",
+      "strength": "20 mg",
+      "dose_amount": 1,
+      "dose_unit": "capsule",
+      "frequency_verbatim": "once daily before breakfast",
+      "times_per_day": 1,
+      "as_needed": false,
+      "slots": [
+        "morning"
+      ],
+      "with_food": "empty_stomach",
+      "status": "continue",
+      "duration_verbatim": null,
+      "source_quote": "CONTINUE: Omeprazole 20 mg - take 1 capsule by mouth once daily before breakfast.",
+      "source_doc": 0
+    },
+    {
+      "name": "Advil Liqui-Gels",
+      "strength": "200 mg",
+      "dose_amount": 2,
+      "dose_unit": "capsule",
+      "frequency_verbatim": "every 4 to 6 hours while symptoms persist",
+      "times_per_day": null,
+      "as_needed": false,
+      "slots": [],
+      "with_food": "not_stated",
+      "status": "unclear",
+      "duration_verbatim": null,
+      "source_quote": "Advil Liqui-Gels 200 mg\nTake 2 capsules every 4 to 6 hours while symptoms persist.",
+      "source_doc": 1
+    }
+  ],
+  "failures": [],
+  "retried": true,
+  "model": "claude-sonnet-5-5"
+}

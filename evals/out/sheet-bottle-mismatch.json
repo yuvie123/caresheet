@@ -1,0 +1,87 @@
+{
+  "transcript": [
+    {
+      "doc_index": 0,
+      "text": "FICTIONAL SAMPLE\nDischarge medications\nCHANGED: Metoprolol succinate 25 mg - take 1 tablet by mouth once daily. Dose lowered."
+    },
+    {
+      "doc_index": 1,
+      "text": "FICTIONAL BOTTLE LABEL\nMetoprolol succinate ER 50 mg tablets\nTake 1 tablet by mouth once daily."
+    }
+  ],
+  "medications": [
+    {
+      "name": "Metoprolol succinate",
+      "strength": "25 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "once daily",
+      "times_per_day": 1,
+      "as_needed": false,
+      "slots": [
+        "morning"
+      ],
+      "with_food": "not_stated",
+      "status": "changed",
+      "duration_verbatim": null,
+      "source_quote": "Metoprolol succinate 25 mg - take 1 tablet by mouth once daily.",
+      "source_doc": 0
+    },
+    {
+      "name": "Metoprolol succinate ER",
+      "strength": "50 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "once daily",
+      "times_per_day": 1,
+      "as_needed": false,
+      "slots": [
+        "morning"
+      ],
+      "with_food": "not_stated",
+      "status": "unclear",
+      "duration_verbatim": null,
+      "source_quote": "Metoprolol succinate ER 50 mg tablets",
+      "source_doc": 1
+    }
+  ],
+  "ask_pharmacist": [
+    {
+      "kind": "mismatch",
+      "issue": "The discharge sheet says metoprolol succinate 25 mg once daily (dose lowered), but the pill bottle is metoprolol succinate ER 50 mg tablets. Which strength should be taken, and is the bottle the old dose?",
+      "quotes": [
+        "Metoprolol succinate 25 mg - take 1 tablet by mouth once daily.",
+        "Metoprolol succinate ER 50 mg tablets"
+      ]
+    }
+  ],
+  "follow_ups": [],
+  "warning_signs": [],
+  "verified_medications": [
+    {
+      "name": "Metoprolol succinate",
+      "strength": "25 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "once daily",
+      "times_per_day": 1,
+      "as_needed": false,
+      "slots": [
+        "morning"
+      ],
+      "with_food": "not_stated",
+      "status": "changed",
+      "duration_verbatim": null,
+      "source_quote": "Metoprolol succinate 25 mg - take 1 tablet by mouth once daily.",
+      "source_doc": 0
+    }
+  ],
+  "failures": [
+    {
+      "medication": "Metoprolol succinate ER",
+      "reason": "the dose numbers do not appear in the quoted sentence"
+    }
+  ],
+  "retried": true,
+  "model": "claude-sonnet-5-5"
+}

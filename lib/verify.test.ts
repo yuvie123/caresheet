@@ -42,6 +42,7 @@ describe("digits", () => {
   it("reads decimal commas and halves", () => {
     expect(extractNumbers("2,5 mg")).toEqual(["2.5"]);
     expect(extractNumbers("½ tablet")).toEqual(["0.5"]);
+    expect(extractNumbers("1½ tablets")).toEqual(["1.5"]);
   });
   it("flags a translation that adds a number", () => {
     expect(introducesNewNumber("Take with food", "ਭੋਜਨ ਨਾਲ ਲਓ")).toBe(false);
@@ -85,6 +86,28 @@ describe("verifyPlan", () => {
     const v = verifyPlan(plan([med({ strength: "50 mg" })]));
     expect(v.verified_medications).toHaveLength(0);
     expect(v.failures[0].reason).toMatch(/dose numbers/);
+  });
+  it("accepts a dose written later on the same line as the name", () => {
+    const p = plan([]);
+    p.transcript[0].text += "\nCHANGED: Atorvastatin - dose increased. Now take 40 mg (1 tablet) at bedtime.";
+    p.medications = [med({ name: "Atorvastatin", strength: "40 mg", source_quote: "Atorvastatin - dose increased." })];
+    expect(verifyPlan(p).verified_medications).toHaveLength(1);
+  });
+  it("accepts a pill label with the brand and strength on adjacent lines", () => {
+    const p = plan([]);
+    p.transcript.push({
+      doc_index: 1,
+      text: "Extra Strength TYLENOL\nAcetaminophen 500 mg caplets\nDirections: adults take 2 caplets every 6 hours.",
+    });
+    p.medications = [
+      med({ name: "TYLENOL", strength: "500 mg", dose_amount: 2, source_quote: "Extra Strength TYLENOL", source_doc: 1 }),
+    ];
+    expect(verifyPlan(p).verified_medications).toHaveLength(1);
+  });
+  it("still rejects a dose that appears nowhere near the medicine", () => {
+    const p = plan([]);
+    p.medications = [med({ name: "Metoprolol tartrate", strength: "75 mg", source_quote: "Metoprolol tartrate 25 mg" })];
+    expect(verifyPlan(p).verified_medications).toHaveLength(0);
   });
   it("drops warning signs that are not in the documents", () => {
     const p = plan([med({})]);

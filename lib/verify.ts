@@ -50,15 +50,43 @@ export function quoteIsGrounded(quote: string, transcript: string, threshold = 0
   return best >= threshold;
 }
 
+function doseNumbers(med: Medication): string[] {
+  return [...extractNumbers(med.strength ?? ""), ...(med.dose_amount !== null ? [String(med.dose_amount)] : [])];
+}
+
+function numbersPresent(nums: string[], text: string): boolean {
+  const have = new Set(extractNumbers(text));
+  // A dose amount of 1 is often written as a word ("take one tablet"); allow that.
+  return nums.every((n) => have.has(n) || (n === "1" && /\b(one|a|an)\b/i.test(text)));
+}
+
 /** Every number in the medication's strength and dose amount must also appear in its quote. */
 export function doseNumbersInQuote(med: Medication): boolean {
-  const quoteNumbers = new Set(extractNumbers(med.source_quote));
-  const doseNumbers = [
-    ...extractNumbers(med.strength ?? ""),
-    ...(med.dose_amount !== null ? [String(med.dose_amount)] : []),
-  ];
-  // A dose amount of 1 is often implied ("take one tablet" written as a word); allow word forms.
-  return doseNumbers.every((n) => quoteNumbers.has(n) || (n === "1" && /\b(one|a|an)\b/i.test(med.source_quote)));
+  return numbersPresent(doseNumbers(med), med.source_quote);
+}
+
+/**
+ * Looser but still grounded: the dose numbers appear on a line of the document that names the
+ * medication, or on the line right after it. Handles "Atorvastatin - dose increased. Now take 40 mg"
+ * and pill labels that put the brand and the strength on separate lines.
+ */
+export function doseNumbersNearName(med: Medication, doc: string): boolean {
+  const lines = doc.split(/\r?\n/);
+  const nameWords = normalizeForMatch(med.name).split(" ").filter((w) => w.length > 2);
+  if (nameWords.length === 0) return false;
+  const strengthNums = extractNumbers(med.strength ?? "");
+  // How many pills (e.g. "take 2 caplets") is often in a separate directions line, so it only has to
+  // appear somewhere in the same document. The strength (e.g. 500 mg) must sit next to the name.
+  const amountOk =
+    med.dose_amount === null || numbersPresent([String(med.dose_amount)], `${med.source_quote}\n${doc}`);
+  if (!amountOk) return false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = normalizeForMatch(lines[i]);
+    if (!nameWords.some((w) => line.includes(w))) continue;
+    const window = [lines[i], lines[i + 1] ?? ""].join(" ");
+    if (numbersPresent(strengthNums, window)) return true;
+  }
+  return false;
 }
 
 export type VerifyFailure = { medication: string; reason: string };
@@ -82,7 +110,8 @@ export function verifyPlan(plan: Plan): VerifiedPlan {
     if (!med.source_quote.trim()) reason = "no source sentence was given";
     else if (!quoteIsGrounded(med.source_quote, doc) && !quoteIsGrounded(med.source_quote, fullTranscript))
       reason = "the quoted sentence could not be found in the documents";
-    else if (!doseNumbersInQuote(med)) reason = "the dose numbers do not appear in the quoted sentence";
+    else if (!doseNumbersInQuote(med) && !doseNumbersNearName(med, doc))
+      reason = "the dose numbers do not appear next to this medicine in the documents";
     else if (!quoteIsGrounded(med.name, med.source_quote, 0.5) && !quoteIsGrounded(med.name, fullTranscript, 0.5))
       reason = "the medication name does not appear in the documents";
 

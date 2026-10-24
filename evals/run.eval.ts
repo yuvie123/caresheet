@@ -1,7 +1,7 @@
 // Runs every eval case against the real Claude API and writes evals/results.md.
 // Run with: pnpm eval   (needs ANTHROPIC_API_KEY in .env.local)
 // This costs a little money per run (a few cents per case), so it is not part of `pnpm test`.
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { afterAll, describe, expect, it } from "vitest";
 import { extractPlan, MODEL, type PlanResult } from "../lib/claude";
 import { CASES, type EvalCase } from "./cases";
@@ -37,6 +37,8 @@ describe(`CareSheet evals (${MODEL})`, () => {
     it(c.id, async () => {
       const t0 = Date.now();
       const plan = await extractPlan(c.texts.map((text, i) => ({ kind: "text", text, label: `doc ${i}` })));
+      mkdirSync(new URL("./out/", import.meta.url), { recursive: true });
+      writeFileSync(new URL(`./out/${c.id}.json`, import.meta.url), JSON.stringify(plan, null, 2));
       const { notes, invented } = grade(c, plan);
       rows.push({ id: c.id, pass: notes.length === 0, notes, invented, seconds: (Date.now() - t0) / 1000 });
       expect(invented).toBe(0);

@@ -22,7 +22,10 @@ function toAsciiDigit(ch: string): string {
 
 /** Replace every digit from a supported script with its ASCII digit, and ½ with .5. */
 export function normalizeDigits(text: string): string {
-  return text.replace(/\p{Nd}/gu, toAsciiDigit).replace(/½/g, ".5");
+  return text
+    .replace(/\p{Nd}/gu, toAsciiDigit)
+    .replace(/(\d)\s*½/g, "$1.5") // "1½" -> "1.5"
+    .replace(/½/g, "0.5"); // "½" -> "0.5"
 }
 
 /**

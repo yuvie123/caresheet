@@ -1,0 +1,84 @@
+{
+  "transcript": [
+    {
+      "doc_index": 0,
+      "text": "FICTIONAL SAMPLE\nDischarge medications\nSTOP: Glipizide 5 mg - stop taking. It caused low blood sugar.\nCONTINUE: Metformin 1000 mg - take 1 tablet by mouth twice daily with meals."
+    }
+  ],
+  "medications": [
+    {
+      "name": "Glipizide",
+      "strength": "5 mg",
+      "dose_amount": null,
+      "dose_unit": null,
+      "frequency_verbatim": "stop taking",
+      "times_per_day": null,
+      "as_needed": false,
+      "slots": [],
+      "with_food": "not_stated",
+      "status": "stop",
+      "duration_verbatim": null,
+      "source_quote": "STOP: Glipizide 5 mg - stop taking.",
+      "source_doc": 0
+    },
+    {
+      "name": "Metformin",
+      "strength": "1000 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "twice daily",
+      "times_per_day": 2,
+      "as_needed": false,
+      "slots": [
+        "morning",
+        "evening"
+      ],
+      "with_food": "with_food",
+      "status": "continue",
+      "duration_verbatim": null,
+      "source_quote": "CONTINUE: Metformin 1000 mg - take 1 tablet by mouth twice daily with meals.",
+      "source_doc": 0
+    }
+  ],
+  "ask_pharmacist": [],
+  "follow_ups": [],
+  "warning_signs": [],
+  "verified_medications": [
+    {
+      "name": "Glipizide",
+      "strength": "5 mg",
+      "dose_amount": null,
+      "dose_unit": null,
+      "frequency_verbatim": "stop taking",
+      "times_per_day": null,
+      "as_needed": false,
+      "slots": [],
+      "with_food": "not_stated",
+      "status": "stop",
+      "duration_verbatim": null,
+      "source_quote": "STOP: Glipizide 5 mg - stop taking.",
+      "source_doc": 0
+    },
+    {
+      "name": "Metformin",
+      "strength": "1000 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "twice daily",
+      "times_per_day": 2,
+      "as_needed": false,
+      "slots": [
+        "morning",
+        "evening"
+      ],
+      "with_food": "with_food",
+      "status": "continue",
+      "duration_verbatim": null,
+      "source_quote": "CONTINUE: Metformin 1000 mg - take 1 tablet by mouth twice daily with meals.",
+      "source_doc": 0
+    }
+  ],
+  "failures": [],
+  "retried": true,
+  "model": "claude-sonnet-5-5"
+}

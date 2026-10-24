@@ -1,0 +1,90 @@
+{
+  "transcript": [
+    {
+      "doc_index": 0,
+      "text": "FICTIONAL SAMPLE\nDischarge medications\nNEW: Amoxicillin 500 mg - take 1 capsule by mouth three times daily for 7 days.\nCONTINUE: Levothyroxine 50 mcg - take 1 tablet by mouth once daily before breakfast on an empty stomach."
+    }
+  ],
+  "medications": [
+    {
+      "name": "Amoxicillin",
+      "strength": "500 mg",
+      "dose_amount": 1,
+      "dose_unit": "capsule",
+      "frequency_verbatim": "three times daily",
+      "times_per_day": 3,
+      "as_needed": false,
+      "slots": [
+        "morning",
+        "noon",
+        "evening"
+      ],
+      "with_food": "not_stated",
+      "status": "new",
+      "duration_verbatim": "for 7 days",
+      "source_quote": "NEW: Amoxicillin 500 mg - take 1 capsule by mouth three times daily for 7 days.",
+      "source_doc": 0
+    },
+    {
+      "name": "Levothyroxine",
+      "strength": "50 mcg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "once daily",
+      "times_per_day": 1,
+      "as_needed": false,
+      "slots": [
+        "morning"
+      ],
+      "with_food": "empty_stomach",
+      "status": "continue",
+      "duration_verbatim": null,
+      "source_quote": "CONTINUE: Levothyroxine 50 mcg - take 1 tablet by mouth once daily before breakfast on an empty stomach.",
+      "source_doc": 0
+    }
+  ],
+  "ask_pharmacist": [],
+  "follow_ups": [],
+  "warning_signs": [],
+  "verified_medications": [
+    {
+      "name": "Amoxicillin",
+      "strength": "500 mg",
+      "dose_amount": 1,
+      "dose_unit": "capsule",
+      "frequency_verbatim": "three times daily",
+      "times_per_day": 3,
+      "as_needed": false,
+      "slots": [
+        "morning",
+        "noon",
+        "evening"
+      ],
+      "with_food": "not_stated",
+      "status": "new",
+      "duration_verbatim": "for 7 days",
+      "source_quote": "NEW: Amoxicillin 500 mg - take 1 capsule by mouth three times daily for 7 days.",
+      "source_doc": 0
+    },
+    {
+      "name": "Levothyroxine",
+      "strength": "50 mcg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "once daily",
+      "times_per_day": 1,
+      "as_needed": false,
+      "slots": [
+        "morning"
+      ],
+      "with_food": "empty_stomach",
+      "status": "continue",
+      "duration_verbatim": null,
+      "source_quote": "CONTINUE: Levothyroxine 50 mcg - take 1 tablet by mouth once daily before breakfast on an empty stomach.",
+      "source_doc": 0
+    }
+  ],
+  "failures": [],
+  "retried": true,
+  "model": "claude-sonnet-5-5"
+}

@@ -1,0 +1,371 @@
+{
+  "transcript": [
+    {
+      "doc_index": 0,
+      "text": "FICTIONAL SAMPLE - NOT A REAL PATIENT\nRiverside General Hospital - Discharge Instructions\nPatient: Harbans Kaur        Age: 74\nDischarge date: October 22, 2026\nReason for stay: Fast heart rhythm (atrial fibrillation) and fluid in the lungs\n\nDISCHARGE MEDICATION LIST\nPlease follow this list. It replaces any list you had before.\n\nNEW medications (start taking):\n- Metoprolol tartrate 25 mg - take 1 tablet by mouth twice daily with food.\n- Apixaban 5 mg - take 1 tablet by mouth twice daily, about 12 hours apart. Do not skip doses.\n- Furosemide 20 mg - take 1 tablet by mouth once daily in the morning for 5 days, then stop.\n\nCHANGED medications:\n- Atorvastatin - dose increased. Now take 40 mg (1 tablet) by mouth once daily at bedtime.\n\nCONTINUE taking as before:\n- Metformin 500 mg - take 1 tablet by mouth twice daily with breakfast and dinner.\n- Acetaminophen 500 mg - take 1 to 2 tablets by mouth every 6 hours as needed for pain. Do not take more than 6 tablets in 24 hours.\n\nSTOP taking these medications:\n- Amlodipine 5 mg - STOP. Your blood pressure is now treated with metoprolol.\n- Aspirin 81 mg - STOP. Apixaban replaces aspirin. Taking both increases bleeding risk.\n\nFOLLOW-UP\n- See Dr. Okafor (cardiology) in 1 week. The clinic will call to book.\n- Blood test for kidney function and potassium in 5 days.\n\nWHEN TO GET HELP\nCall your doctor or go to emergency if you have:\n- Chest pain, or a heartbeat that feels very fast or irregular\n- Black or bloody stools, or bleeding that will not stop\n- Swelling in the legs or weight gain of more than 2 kg in 2 days\n- Feeling dizzy or faint"
+    },
+    {
+      "doc_index": 1,
+      "text": "FICTIONAL SAMPLE BOTTLE LABEL (photographed in the family kitchen)\nExtra Strength TYLENOL\nAcetaminophen 500 mg caplets\nDirections: adults take 2 caplets every 6 hours while symptoms last. Do not take more than 6 caplets in 24 hours."
+    }
+  ],
+  "medications": [
+    {
+      "name": "Metoprolol tartrate",
+      "strength": "25 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "twice daily",
+      "times_per_day": 2,
+      "as_needed": false,
+      "slots": [
+        "morning",
+        "evening"
+      ],
+      "with_food": "with_food",
+      "status": "new",
+      "duration_verbatim": null,
+      "source_quote": "Metoprolol tartrate 25 mg - take 1 tablet by mouth twice daily with food.",
+      "source_doc": 0
+    },
+    {
+      "name": "Apixaban",
+      "strength": "5 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "twice daily, about 12 hours apart",
+      "times_per_day": 2,
+      "as_needed": false,
+      "slots": [
+        "morning",
+        "evening"
+      ],
+      "with_food": "not_stated",
+      "status": "new",
+      "duration_verbatim": null,
+      "source_quote": "Apixaban 5 mg - take 1 tablet by mouth twice daily, about 12 hours apart.",
+      "source_doc": 0
+    },
+    {
+      "name": "Furosemide",
+      "strength": "20 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "once daily in the morning",
+      "times_per_day": 1,
+      "as_needed": false,
+      "slots": [
+        "morning"
+      ],
+      "with_food": "not_stated",
+      "status": "new",
+      "duration_verbatim": "for 5 days, then stop",
+      "source_quote": "Furosemide 20 mg - take 1 tablet by mouth once daily in the morning for 5 days, then stop.",
+      "source_doc": 0
+    },
+    {
+      "name": "Atorvastatin",
+      "strength": "40 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "once daily at bedtime",
+      "times_per_day": 1,
+      "as_needed": false,
+      "slots": [
+        "bedtime"
+      ],
+      "with_food": "not_stated",
+      "status": "changed",
+      "duration_verbatim": null,
+      "source_quote": "Atorvastatin - dose increased. Now take 40 mg (1 tablet) by mouth once daily at bedtime.",
+      "source_doc": 0
+    },
+    {
+      "name": "Metformin",
+      "strength": "500 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "twice daily with breakfast and dinner",
+      "times_per_day": 2,
+      "as_needed": false,
+      "slots": [
+        "morning",
+        "evening"
+      ],
+      "with_food": "with_food",
+      "status": "continue",
+      "duration_verbatim": null,
+      "source_quote": "Metformin 500 mg - take 1 tablet by mouth twice daily with breakfast and dinner.",
+      "source_doc": 0
+    },
+    {
+      "name": "Acetaminophen",
+      "strength": "500 mg",
+      "dose_amount": null,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "every 6 hours as needed for pain",
+      "times_per_day": null,
+      "as_needed": true,
+      "slots": [],
+      "with_food": "not_stated",
+      "status": "continue",
+      "duration_verbatim": null,
+      "source_quote": "Acetaminophen 500 mg - take 1 to 2 tablets by mouth every 6 hours as needed for pain.",
+      "source_doc": 0
+    },
+    {
+      "name": "Amlodipine",
+      "strength": "5 mg",
+      "dose_amount": null,
+      "dose_unit": null,
+      "frequency_verbatim": "STOP",
+      "times_per_day": null,
+      "as_needed": false,
+      "slots": [],
+      "with_food": "not_stated",
+      "status": "stop",
+      "duration_verbatim": null,
+      "source_quote": "Amlodipine 5 mg - STOP.",
+      "source_doc": 0
+    },
+    {
+      "name": "Aspirin",
+      "strength": "81 mg",
+      "dose_amount": null,
+      "dose_unit": null,
+      "frequency_verbatim": "STOP",
+      "times_per_day": null,
+      "as_needed": false,
+      "slots": [],
+      "with_food": "not_stated",
+      "status": "stop",
+      "duration_verbatim": null,
+      "source_quote": "Aspirin 81 mg - STOP.",
+      "source_doc": 0
+    },
+    {
+      "name": "TYLENOL",
+      "strength": "500 mg",
+      "dose_amount": 2,
+      "dose_unit": "caplet",
+      "frequency_verbatim": "every 6 hours while symptoms last",
+      "times_per_day": null,
+      "as_needed": false,
+      "slots": [],
+      "with_food": "not_stated",
+      "status": "unclear",
+      "duration_verbatim": "while symptoms last",
+      "source_quote": "Acetaminophen 500 mg caplets\nDirections: adults take 2 caplets every 6 hours while symptoms last.",
+      "source_doc": 1
+    }
+  ],
+  "ask_pharmacist": [
+    {
+      "kind": "mismatch",
+      "issue": "The Tylenol bottle says to take 2 caplets every 6 hours, while the discharge sheet says 1 to 2 tablets every 6 hours as needed for pain. Which dose should be used? Also, is the Tylenol bottle the same medicine as the Acetaminophen on the discharge list, so it is not taken twice?",
+      "quotes": [
+        "adults take 2 caplets every 6 hours while symptoms last",
+        "take 1 to 2 tablets by mouth every 6 hours as needed for pain"
+      ]
+    },
+    {
+      "kind": "duplicate",
+      "issue": "Tylenol and Acetaminophen both appear and contain acetaminophen 500 mg. Please confirm they are the same medicine and should not be combined.",
+      "quotes": [
+        "Extra Strength TYLENOL",
+        "Acetaminophen 500 mg - take 1 to 2 tablets"
+      ]
+    }
+  ],
+  "follow_ups": [
+    {
+      "text": "See the heart doctor (Dr. Okafor) in 1 week. The clinic will call to book the visit.",
+      "source_quote": "See Dr. Okafor (cardiology) in 1 week. The clinic will call to book."
+    },
+    {
+      "text": "Get a blood test for kidney function and potassium in 5 days.",
+      "source_quote": "Blood test for kidney function and potassium in 5 days."
+    }
+  ],
+  "warning_signs": [
+    {
+      "text": "Chest pain, or a heartbeat that feels very fast or irregular",
+      "source_quote": "Chest pain, or a heartbeat that feels very fast or irregular"
+    },
+    {
+      "text": "Black or bloody stools, or bleeding that will not stop",
+      "source_quote": "Black or bloody stools, or bleeding that will not stop"
+    },
+    {
+      "text": "Swelling in the legs or weight gain of more than 2 kg in 2 days",
+      "source_quote": "Swelling in the legs or weight gain of more than 2 kg in 2 days"
+    },
+    {
+      "text": "Feeling dizzy or faint",
+      "source_quote": "Feeling dizzy or faint"
+    }
+  ],
+  "verified_medications": [
+    {
+      "name": "Metoprolol tartrate",
+      "strength": "25 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "twice daily",
+      "times_per_day": 2,
+      "as_needed": false,
+      "slots": [
+        "morning",
+        "evening"
+      ],
+      "with_food": "with_food",
+      "status": "new",
+      "duration_verbatim": null,
+      "source_quote": "Metoprolol tartrate 25 mg - take 1 tablet by mouth twice daily with food.",
+      "source_doc": 0
+    },
+    {
+      "name": "Apixaban",
+      "strength": "5 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "twice daily, about 12 hours apart",
+      "times_per_day": 2,
+      "as_needed": false,
+      "slots": [
+        "morning",
+        "evening"
+      ],
+      "with_food": "not_stated",
+      "status": "new",
+      "duration_verbatim": null,
+      "source_quote": "Apixaban 5 mg - take 1 tablet by mouth twice daily, about 12 hours apart.",
+      "source_doc": 0
+    },
+    {
+      "name": "Furosemide",
+      "strength": "20 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "once daily in the morning",
+      "times_per_day": 1,
+      "as_needed": false,
+      "slots": [
+        "morning"
+      ],
+      "with_food": "not_stated",
+      "status": "new",
+      "duration_verbatim": "for 5 days, then stop",
+      "source_quote": "Furosemide 20 mg - take 1 tablet by mouth once daily in the morning for 5 days, then stop.",
+      "source_doc": 0
+    },
+    {
+      "name": "Atorvastatin",
+      "strength": "40 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "once daily at bedtime",
+      "times_per_day": 1,
+      "as_needed": false,
+      "slots": [
+        "bedtime"
+      ],
+      "with_food": "not_stated",
+      "status": "changed",
+      "duration_verbatim": null,
+      "source_quote": "Atorvastatin - dose increased. Now take 40 mg (1 tablet) by mouth once daily at bedtime.",
+      "source_doc": 0
+    },
+    {
+      "name": "Metformin",
+      "strength": "500 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "twice daily with breakfast and dinner",
+      "times_per_day": 2,
+      "as_needed": false,
+      "slots": [
+        "morning",
+        "evening"
+      ],
+      "with_food": "with_food",
+      "status": "continue",
+      "duration_verbatim": null,
+      "source_quote": "Metformin 500 mg - take 1 tablet by mouth twice daily with breakfast and dinner.",
+      "source_doc": 0
+    },
+    {
+      "name": "Acetaminophen",
+      "strength": "500 mg",
+      "dose_amount": null,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "every 6 hours as needed for pain",
+      "times_per_day": null,
+      "as_needed": true,
+      "slots": [],
+      "with_food": "not_stated",
+      "status": "continue",
+      "duration_verbatim": null,
+      "source_quote": "Acetaminophen 500 mg - take 1 to 2 tablets by mouth every 6 hours as needed for pain.",
+      "source_doc": 0
+    },
+    {
+      "name": "Amlodipine",
+      "strength": "5 mg",
+      "dose_amount": null,
+      "dose_unit": null,
+      "frequency_verbatim": "STOP",
+      "times_per_day": null,
+      "as_needed": false,
+      "slots": [],
+      "with_food": "not_stated",
+      "status": "stop",
+      "duration_verbatim": null,
+      "source_quote": "Amlodipine 5 mg - STOP.",
+      "source_doc": 0
+    },
+    {
+      "name": "Aspirin",
+      "strength": "81 mg",
+      "dose_amount": null,
+      "dose_unit": null,
+      "frequency_verbatim": "STOP",
+      "times_per_day": null,
+      "as_needed": false,
+      "slots": [],
+      "with_food": "not_stated",
+      "status": "stop",
+      "duration_verbatim": null,
+      "source_quote": "Aspirin 81 mg - STOP.",
+      "source_doc": 0
+    },
+    {
+      "name": "TYLENOL",
+      "strength": "500 mg",
+      "dose_amount": 2,
+      "dose_unit": "caplet",
+      "frequency_verbatim": "every 6 hours while symptoms last",
+      "times_per_day": null,
+      "as_needed": false,
+      "slots": [],
+      "with_food": "not_stated",
+      "status": "unclear",
+      "duration_verbatim": "while symptoms last",
+      "source_quote": "Acetaminophen 500 mg caplets\nDirections: adults take 2 caplets every 6 hours while symptoms last.",
+      "source_doc": 1
+    }
+  ],
+  "failures": [],
+  "retried": true,
+  "first_failures": [
+    {
+      "medication": "Atorvastatin",
+      "reason": "the dose numbers do not appear in the quoted sentence"
+    },
+    {
+      "medication": "TYLENOL",
+      "reason": "the dose numbers do not appear in the quoted sentence"
+    }
+  ],
+  "model": "claude-sonnet-5-5"
+}

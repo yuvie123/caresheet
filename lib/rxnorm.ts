@@ -46,7 +46,7 @@ async function getJson(url: string): Promise<unknown> {
   return res.json();
 }
 
-type Approx = { approximateGroup?: { candidate?: { rxcui?: string; score?: string }[] } };
+type Approx = { approximateGroup?: { candidate?: { rxcui?: string; score?: string; source?: string }[] } };
 type Related = { relatedGroup?: { conceptGroup?: { conceptProperties?: { name?: string }[] }[] } };
 
 function fallbackLookup(name: string): string[] | null {
@@ -64,22 +64,34 @@ export async function ingredientsFor(name: string): Promise<{ ingredients: strin
   if (cache.has(key)) return { ingredients: cache.get(key)!, source: "rxnorm" };
   try {
     const approx = (await getJson(
-      `${BASE}/approximateTerm.json?term=${encodeURIComponent(name)}&maxEntries=1`,
+      `${BASE}/approximateTerm.json?term=${encodeURIComponent(name)}&maxEntries=5`,
     )) as Approx;
-    const rxcui = approx.approximateGroup?.candidate?.[0]?.rxcui;
-    if (!rxcui) {
-      cache.set(key, null);
-      return { ingredients: null, source: "rxnorm" };
+    // Try RxNorm's own concepts first; partner vocabularies (e.g. MMSL) often have no ingredient link.
+    const candidates = approx.approximateGroup?.candidate ?? [];
+    const ordered = [...candidates.filter((c) => c.source === "RXNORM"), ...candidates.filter((c) => c.source !== "RXNORM")];
+    const tried = new Set<string>();
+    for (const c of ordered) {
+      if (!c.rxcui || tried.has(c.rxcui)) continue;
+      tried.add(c.rxcui);
+      if (tried.size > 3) break;
+      // IN = single ingredient. Works for generics, brands (Tylenol -> acetaminophen) and combinations
+      // (amoxicillin / clavulanate -> both). Do NOT ask for MIN: for a plain ingredient that returns
+      // every combination product containing it (acetaminophen + codeine, + caffeine, ...).
+      const related = (await getJson(`${BASE}/rxcui/${c.rxcui}/related.json?tty=IN`)) as Related;
+      const names = (related.relatedGroup?.conceptGroup ?? [])
+        .flatMap((g) => g.conceptProperties ?? [])
+        .map((p) => (p.name ?? "").toLowerCase())
+        .filter(Boolean);
+      if (names.length) {
+        const result = [...new Set(names)];
+        cache.set(key, result);
+        return { ingredients: result, source: "rxnorm" };
+      }
     }
-    // IN = ingredient, MIN = multi-ingredient (e.g. amoxicillin-clavulanate)
-    const related = (await getJson(`${BASE}/rxcui/${rxcui}/related.json?tty=IN+MIN`)) as Related;
-    const names = (related.relatedGroup?.conceptGroup ?? [])
-      .flatMap((g) => g.conceptProperties ?? [])
-      .map((c) => (c.name ?? "").toLowerCase())
-      .filter(Boolean);
-    const result = names.length ? [...new Set(names)] : null;
-    cache.set(key, result);
-    return { ingredients: result, source: "rxnorm" };
+    // RxNorm couldn't identify it; the offline list may still know the brand.
+    const fb = fallbackLookup(name);
+    cache.set(key, fb);
+    return { ingredients: fb, source: fb ? "fallback" : "rxnorm" };
   } catch {
     return { ingredients: fallbackLookup(name), source: "fallback" };
   }
@@ -89,32 +101,35 @@ export async function ingredientsFor(name: string): Promise<{ ingredients: strin
  * Finds medications (that are still being taken) which share an active ingredient.
  * Returns pharmacist questions, each citing both source sentences.
  */
-export async function findDuplicateIngredients(meds: Medication[]): Promise<PharmacistItem[]> {
+export type DuplicateFinding = { ingredient: string; medNames: string[]; item: PharmacistItem };
+
+export async function findDuplicateIngredients(meds: Medication[]): Promise<DuplicateFinding[]> {
   const active = meds.filter((m) => m.status !== "stop");
   const lookups = await Promise.all(active.map(async (m) => ({ med: m, ...(await ingredientsFor(m.name)) })));
 
   const byIngredient = new Map<string, typeof lookups>();
   for (const l of lookups) {
     for (const ing of l.ingredients ?? []) {
-      // Multi-ingredient names like "amoxicillin / clavulanate" also count for each part.
-      for (const part of ing.split(/\s*\/\s*|\s+and\s+/)) {
-        const list = byIngredient.get(part) ?? [];
-        if (!list.some((x) => x.med === l.med)) list.push(l);
-        byIngredient.set(part, list);
-      }
+      const list = byIngredient.get(ing) ?? [];
+      if (!list.some((x) => x.med === l.med)) list.push(l);
+      byIngredient.set(ing, list);
     }
   }
 
-  const questions: PharmacistItem[] = [];
+  const findings: DuplicateFinding[] = [];
   for (const [ingredient, list] of byIngredient) {
     if (list.length < 2) continue;
     const names = list.map((l) => `${l.med.name}${l.med.strength ? ` ${l.med.strength}` : ""}`);
     const viaRx = list.every((l) => l.source === "rxnorm");
-    questions.push({
-      kind: "duplicate",
-      issue: `${names.join(" and ")} all contain ${ingredient}${viaRx ? " (checked with NIH RxNorm)" : ""}. Should these be taken together, or is one replacing the other?`,
-      quotes: list.map((l) => l.med.source_quote),
+    findings.push({
+      ingredient,
+      medNames: list.map((l) => l.med.name),
+      item: {
+        kind: "duplicate",
+        issue: `${names.join(" and ")} all contain ${ingredient}${viaRx ? " (checked with NIH RxNorm)" : ""}. Should these be taken together, or is one replacing the other?`,
+        quotes: list.map((l) => l.med.source_quote),
+      },
     });
   }
-  return questions;
+  return findings;
 }
