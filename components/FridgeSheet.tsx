@@ -141,7 +141,7 @@ export default function FridgeSheet({
                 </h3>
                 <ul className="px-3 py-1">
                   {meds.map((m) => (
-                    <MedLine key={m.name} med={m} index={idx(m)} slot={slot} t={translations} />
+                    <MedLine key={idx(m)} med={m} index={idx(m)} slot={slot} t={translations} />
                   ))}
                 </ul>
               </section>
@@ -163,7 +163,7 @@ export default function FridgeSheet({
             <h3 className="pt-1 font-bold">{label("as_needed_title")}</h3>
             <ul>
               {asNeeded.map((m) => (
-                <li key={m.name} className="border-b border-rule py-1.5 last:border-0">
+                <li key={idx(m)} className="border-b border-rule py-1.5 last:border-0">
                   <span className="font-bold">{m.name}</span> {m.strength}
                   <div className="text-[0.85em] text-muted">
                     <Bi id={`freq_${idx(m)}`} en={m.frequency_verbatim} t={translations} />

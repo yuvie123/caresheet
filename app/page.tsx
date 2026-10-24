@@ -5,6 +5,7 @@
 // 3. See the pill organizer, the med list, pharmacist questions, and print the fridge sheet.
 import { useEffect, useRef, useState } from "react";
 import AskPharmacist from "@/components/AskPharmacist";
+import Feedback from "@/components/Feedback";
 import FileThumbs from "@/components/FileThumbs";
 import FridgeSheet from "@/components/FridgeSheet";
 import HowItWorks from "@/components/HowItWorks";
@@ -347,6 +348,7 @@ export default function Home() {
               <h2 id="ask" className="text-3xl font-bold">Ask your pharmacist</h2>
               <p className="mb-4 text-muted">CareSheet didn&apos;t put these on the schedule. Show this list at the pharmacy counter.</p>
               <AskPharmacist plan={plan} />
+              {!isExample ? <Feedback flags={plan.ask_pharmacist.length} /> : null}
             </section>
 
             <section aria-labelledby="meds">

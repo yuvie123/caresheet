@@ -16,22 +16,23 @@ export function normalizeForMatch(text: string): string {
 }
 
 /**
- * Does `quote` really appear in `transcript`?
- * Passes if the cleaned quote appears exactly, or if at least `threshold` of its words appear in the
- * best stretch of the transcript that is the same length as the quote (tolerates small OCR slips).
+ * Finds `quote` in `transcript` and returns the matching stretch of the transcript (normalized), or null.
+ * Exact match first; otherwise the best stretch of the same length where at least `threshold` of the
+ * quote's words appear (tolerates small transcription slips).
  */
-export function quoteIsGrounded(quote: string, transcript: string, threshold = 0.85): boolean {
+export function findQuote(quote: string, transcript: string, threshold = 0.85): string | null {
   const q = normalizeForMatch(quote);
   const t = normalizeForMatch(transcript);
-  if (!q) return false;
-  if (t.includes(q)) return true;
+  if (!q) return null;
+  if (t.includes(q)) return q;
 
   const qWords = q.split(" ");
   const tWords = t.split(" ");
   const n = qWords.length;
-  if (tWords.length === 0) return false;
+  if (tWords.length === 0) return null;
 
   let best = 0;
+  let bestStart = 0;
   const windowSize = Math.min(n, tWords.length);
   for (let start = 0; start + windowSize <= tWords.length; start++) {
     const pool = new Map<string, number>();
@@ -44,49 +45,76 @@ export function quoteIsGrounded(quote: string, transcript: string, threshold = 0
         pool.set(w, c - 1);
       }
     }
-    best = Math.max(best, hits / n);
-    if (best >= threshold) return true;
+    if (hits / n > best) {
+      best = hits / n;
+      bestStart = start;
+    }
   }
-  return best >= threshold;
+  return best >= threshold ? tWords.slice(bestStart, bestStart + windowSize).join(" ") : null;
 }
 
-function doseNumbers(med: Medication): string[] {
-  return [...extractNumbers(med.strength ?? ""), ...(med.dose_amount !== null ? [String(med.dose_amount)] : [])];
+/**
+ * Does `quote` really appear in `transcript`? The words must match (allowing small slips) AND every
+ * number in the quote must appear in the matching stretch. A quote where Claude changed "25" to "50"
+ * matches 9 of 10 words, so the number check is what catches it.
+ */
+export function quoteIsGrounded(quote: string, transcript: string, threshold = 0.85): boolean {
+  const match = findQuote(quote, transcript, threshold);
+  if (match === null) return false;
+  const have = new Set(extractNumbers(match));
+  return extractNumbers(quote).every((n) => have.has(n));
 }
 
-function numbersPresent(nums: string[], text: string): boolean {
-  const have = new Set(extractNumbers(text));
-  // A dose amount of 1 is often written as a word ("take one tablet"); allow that.
-  return nums.every((n) => have.has(n) || (n === "1" && /\b(one|a|an)\b/i.test(text)));
+/** True if `n` appears as a number in `text`, or n is 1 and the text says "one/a/an <unit>". */
+function hasNumber(n: string, text: string, unit: string | null): boolean {
+  if (extractNumbers(text).includes(n)) return true;
+  if (n !== "1" || !unit) return false;
+  const stem = unit.toLowerCase().replace(/s$/, "").replace(/[^a-z]/g, "");
+  if (!stem) return false;
+  // "one tablet", "a capsule", "one extended-release tablet"; but NOT the "a" in "twice a day".
+  return new RegExp(`\\b(one|a|an|single)\\s+(?:[a-z-]+\\s+)?${stem}`, "i").test(text);
+}
+
+/** Every number shown to the family for this medicine. */
+function requiredNumbers(med: Medication): { n: string; nearName: "strength" | "other" }[] {
+  return [
+    ...extractNumbers(med.strength ?? "").map((n) => ({ n, nearName: "strength" as const })),
+    ...(med.dose_amount !== null ? [{ n: String(med.dose_amount), nearName: "other" as const }] : []),
+    ...extractNumbers(med.frequency_verbatim).map((n) => ({ n, nearName: "other" as const })),
+    ...extractNumbers(med.duration_verbatim ?? "").map((n) => ({ n, nearName: "other" as const })),
+  ];
 }
 
 /** Every number in the medication's strength and dose amount must also appear in its quote. */
 export function doseNumbersInQuote(med: Medication): boolean {
-  return numbersPresent(doseNumbers(med), med.source_quote);
+  return requiredNumbers(med)
+    .filter((r) => r.nearName === "strength" || r.n === String(med.dose_amount))
+    .every((r) => hasNumber(r.n, med.source_quote, med.dose_unit));
 }
 
 /**
- * Looser but still grounded: the dose numbers appear on a line of the document that names the
- * medication, or on the line right after it. Handles "Atorvastatin - dose increased. Now take 40 mg"
- * and pill labels that put the brand and the strength on separate lines.
+ * Every number the family will see (strength, pill count, frequency, course length) must be written
+ * in the papers right where this medicine is: in the matched quote, or on the line naming the medicine
+ * (strength: that line or the next; other numbers: up to two lines after). Handles "Atorvastatin - dose
+ * increased. Now take 40 mg" and pill labels with the brand, strength and directions on separate lines,
+ * but rejects a number that only appears somewhere else (e.g. "follow up in 2 weeks").
  */
-export function doseNumbersNearName(med: Medication, doc: string): boolean {
+export function numbersGrounded(med: Medication, matchedQuote: string, doc: string): boolean {
+  const required = requiredNumbers(med);
   const lines = doc.split(/\r?\n/);
   const nameWords = normalizeForMatch(med.name).split(" ").filter((w) => w.length > 2);
-  if (nameWords.length === 0) return false;
-  const strengthNums = extractNumbers(med.strength ?? "");
-  // How many pills (e.g. "take 2 caplets") is often in a separate directions line, so it only has to
-  // appear somewhere in the same document. The strength (e.g. 500 mg) must sit next to the name.
-  const amountOk =
-    med.dose_amount === null || numbersPresent([String(med.dose_amount)], `${med.source_quote}\n${doc}`);
-  if (!amountOk) return false;
+  const windows: { strength: string; other: string }[] = [{ strength: matchedQuote, other: matchedQuote }];
   for (let i = 0; i < lines.length; i++) {
     const line = normalizeForMatch(lines[i]);
     if (!nameWords.some((w) => line.includes(w))) continue;
-    const window = [lines[i], lines[i + 1] ?? ""].join(" ");
-    if (numbersPresent(strengthNums, window)) return true;
+    windows.push({
+      strength: `${matchedQuote} ${lines[i]} ${lines[i + 1] ?? ""}`,
+      other: `${matchedQuote} ${lines[i]} ${lines[i + 1] ?? ""} ${lines[i + 2] ?? ""}`,
+    });
   }
-  return false;
+  return windows.some((w) =>
+    required.every((r) => hasNumber(r.n, r.nearName === "strength" ? w.strength : w.other, med.dose_unit)),
+  );
 }
 
 export type VerifyFailure = { medication: string; reason: string };
@@ -107,10 +135,12 @@ export function verifyPlan(plan: Plan): VerifiedPlan {
   for (const med of plan.medications) {
     const doc = plan.transcript.find((d) => d.doc_index === med.source_doc)?.text ?? fullTranscript;
     let reason: string | null = null;
+    const inDoc = quoteIsGrounded(med.source_quote, doc);
+    const matched = inDoc ? findQuote(med.source_quote, doc) : findQuote(med.source_quote, fullTranscript);
     if (!med.source_quote.trim()) reason = "no source sentence was given";
-    else if (!quoteIsGrounded(med.source_quote, doc) && !quoteIsGrounded(med.source_quote, fullTranscript))
+    else if (!inDoc && !quoteIsGrounded(med.source_quote, fullTranscript))
       reason = "the quoted sentence could not be found in the documents";
-    else if (!doseNumbersInQuote(med) && !doseNumbersNearName(med, doc))
+    else if (!numbersGrounded(med, matched ?? "", inDoc ? doc : fullTranscript))
       reason = "the dose numbers do not appear next to this medicine in the documents";
     else if (!quoteIsGrounded(med.name, med.source_quote, 0.5) && !quoteIsGrounded(med.name, fullTranscript, 0.5))
       reason = "the medication name does not appear in the documents";

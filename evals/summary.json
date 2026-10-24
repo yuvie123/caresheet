@@ -1,11 +1,17 @@
 {
   "model": "claude-sonnet-5-5",
   "date": "2026-10-23",
-  "cases": 6,
-  "passed": 6,
+  "cases": 7,
+  "passed": 7,
   "invented": 0,
-  "median_seconds": 7.569,
+  "median_seconds": 7.785,
   "rows": [
+    {
+      "id": "photos-heart-and-bottle",
+      "why": "Phone photos (tilted, folded sheet + pill bottle) instead of typed text",
+      "pass": true,
+      "notes": []
+    },
     {
       "id": "heart-with-bottle",
       "why": "Full reconciliation sheet plus a Tylenol bottle that duplicates acetaminophen",

@@ -104,6 +104,36 @@ describe("verifyPlan", () => {
     ];
     expect(verifyPlan(p).verified_medications).toHaveLength(1);
   });
+  it("rejects a quote where Claude changed a number (25 mg -> 50 mg)", () => {
+    const p = plan([]);
+    p.medications = [
+      med({ strength: "50 mg", source_quote: "Metoprolol tartrate 50 mg - take 1 tablet by mouth twice daily with food" }),
+    ];
+    expect(verifyPlan(p).verified_medications).toHaveLength(0);
+  });
+  it("rejects an invented pill count that only appears elsewhere in the papers", () => {
+    const p = plan([]);
+    p.transcript[0].text += "\nFOLLOW-UP: See your doctor in 2 weeks.";
+    p.medications = [med({ dose_amount: 2, source_quote: "Metoprolol tartrate 25 mg - take 1 tablet by mouth twice daily with food" })];
+    expect(verifyPlan(p).verified_medications).toHaveLength(0);
+  });
+  it("does not accept 'a' in 'twice a day' as a pill count of one", () => {
+    const p = plan([]);
+    p.transcript[0].text = "Lisinopril 10 mg by mouth twice a day.";
+    p.medications = [med({ name: "Lisinopril", strength: "10 mg", dose_amount: 1, dose_unit: "tablet", source_quote: "Lisinopril 10 mg by mouth twice a day." })];
+    expect(verifyPlan(p).verified_medications).toHaveLength(0);
+  });
+  it("accepts 'one tablet' and 'a tablet' written in words", () => {
+    const p = plan([]);
+    p.transcript[0].text = "Lisinopril 10 mg - take one tablet by mouth daily.";
+    p.medications = [med({ name: "Lisinopril", strength: "10 mg", dose_amount: 1, dose_unit: "tablet", source_quote: "Lisinopril 10 mg - take one tablet by mouth daily." })];
+    expect(verifyPlan(p).verified_medications).toHaveLength(1);
+  });
+  it("rejects a course length that isn't in the papers", () => {
+    const p = plan([]);
+    p.medications = [med({ duration_verbatim: "for 3 days" })];
+    expect(verifyPlan(p).verified_medications).toHaveLength(0);
+  });
   it("still rejects a dose that appears nowhere near the medicine", () => {
     const p = plan([]);
     p.medications = [med({ name: "Metoprolol tartrate", strength: "75 mg", source_quote: "Metoprolol tartrate 25 mg" })];

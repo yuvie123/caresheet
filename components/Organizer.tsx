@@ -62,7 +62,7 @@ export default function Organizer({ plan }: { plan: PlanResult }) {
                   <Icon className="h-5 w-5" /> {UI_STRINGS[`slot_${slot}`]}
                 </div>
                 <div className="space-y-1.5 bg-wash/60 p-2">
-                  {items.length ? items.map((m) => <Pill key={m.name} med={m} onQuote={setQuoted} />) : (
+                  {items.length ? items.map((m) => <Pill key={plan.verified_medications.indexOf(m)} med={m} onQuote={setQuoted} />) : (
                     <p className="px-1 text-sm text-muted">Nothing</p>
                   )}
                 </div>
@@ -91,7 +91,7 @@ export default function Organizer({ plan }: { plan: PlanResult }) {
                   return (
                     <div key={d} className="min-h-20 space-y-1 rounded-lg border-t-4 bg-paper/70 p-1.5"
                       style={{ borderTopColor: `var(--color-lid-${slot})` }}>
-                      {items.map((m) => <Pill key={m.name} med={m} onQuote={setQuoted} />)}
+                      {items.map((m) => <Pill key={plan.verified_medications.indexOf(m)} med={m} onQuote={setQuoted} />)}
                     </div>
                   );
                 })}

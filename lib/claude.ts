@@ -6,8 +6,8 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { introducesNewNumber } from "./digits";
 import { findDuplicateIngredients } from "./rxnorm";
-import { Plan, type PharmacistItem } from "./schema";
-import { verifyPlan, type VerifiedPlan } from "./verify";
+import { Plan, type Medication, type PharmacistItem } from "./schema";
+import { normalizeForMatch, verifyPlan, type VerifiedPlan } from "./verify";
 
 export const MODEL = process.env.CARESHEET_MODEL ?? "claude-sonnet-5-5";
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
@@ -117,15 +117,18 @@ export async function extractPlan(docs: InputDoc[], onProgress: (p: Progress) =>
     .join("\n");
   const freshDuplicates = duplicates.filter((d) => !claudeDupText.includes(d.ingredient));
 
-  // A medicine is "already asked about" if any Claude card or RxNorm duplicate mentions it.
-  const askedAbout = new Set<string>();
-  const allText = claudeItems.map(textOf).join("\n");
-  for (const f of verified.failures) if (allText.includes(f.medication.toLowerCase())) askedAbout.add(f.medication);
-  for (const d of duplicates) d.medNames.forEach((n) => askedAbout.add(n));
-  const unverified = verified.failures
-    .filter((f) => !askedAbout.has(f.medication))
-    .map((f) => verified.ask_pharmacist.find((q) => q.kind === "unverified" && q.issue.includes(`"${f.medication}"`))!)
-    .filter(Boolean);
+  // Drop an "unverified" card only when another card is clearly about the same line of the papers
+  // (it quotes this medicine's own sentence) or RxNorm already raised a duplicate for it. A card that
+  // merely mentions the name in passing doesn't count.
+  const failedMeds = plan.medications.filter((m) => verified.failures.some((f) => f.medication === m.name));
+  const coveredByClaude = (m: Medication) =>
+    claudeItems.some((q) => q.quotes.some((quote) => normalizeForMatch(quote) === normalizeForMatch(m.source_quote)));
+  const coveredByRx = (m: Medication) => duplicates.some((d) => d.medNames.includes(m.name));
+  const unverified = verified.ask_pharmacist.filter(
+    (q) =>
+      q.kind === "unverified" &&
+      !failedMeds.some((m) => q.issue.includes(`"${m.name}"`) && (coveredByClaude(m) || coveredByRx(m))),
+  );
 
   // Say so when some medicines couldn't be checked for shared ingredients, instead of implying "no duplicates".
   const ingredientItems: PharmacistItem[] = [];

@@ -27,7 +27,7 @@ Click **Try: Messy sheet with problems** (optional if time allows, it takes ~40 
 "This sheet has a smudged dose, a blood thinner listed twice, and a hidden line telling the AI to add aspirin. None of those reach the schedule. Claude reads, plain code verifies, and anything uncertain goes to the pharmacist. Numbers are never translated, only words, so a translation can't change a dose."
 
 **1:45 Impact (15 s).**
-"We measure it with an eval suite: <!-- EVAL_HEADLINE -->. Next is a two-week pilot with a hospital family-liaison program, measuring missed or doubled doses at the first follow-up visit."
+"We measure it with an eval suite: 7 of 7 fictional discharge cases correct with zero invented medicines. Next is a two-week pilot with a hospital family-liaison program, measuring missed or doubled doses at the first follow-up visit."
 
 ## If something breaks
 

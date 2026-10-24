@@ -47,16 +47,28 @@ export function doseText(med: Medication): string {
   return `${doseNumber(med)} ${unit}`;
 }
 
-/** Number of days from "for 5 days", "x 7 days", "for 3 days, then stop". null = ongoing. */
+/**
+ * Course length from "for 5 days", "x 7 days", "for 3 days, then stop". null = ongoing.
+ * Only reads the duration (never "every 2 days" in the frequency, which is not a course length).
+ */
 export function durationDays(med: Medication): number | null {
-  const m = `${med.duration_verbatim ?? ""} ${med.frequency_verbatim}`.match(/(\d+)\s*days?\b/i);
+  const m = (med.duration_verbatim ?? "").match(/(?:for|x|×)\s*(\d+)\s*days?\b/i);
   return m ? Number(m[1]) : null;
+}
+
+/** "every other day" -> 2, "every 3 days" -> 3, otherwise 1 (daily). */
+export function everyNDays(med: Medication): number {
+  const f = med.frequency_verbatim.toLowerCase();
+  if (/every\s+other\s+day/.test(f)) return 2;
+  const m = f.match(/every\s+(\d+)\s*days?\b/);
+  return m && Number(m[1]) > 1 ? Number(m[1]) : 1;
 }
 
 /** Is this medicine taken on day `dayIndex` (0 = first day home)? */
 export function activeOnDay(med: Medication, dayIndex: number): boolean {
   const d = durationDays(med);
-  return d === null || dayIndex < d;
+  if (d !== null && dayIndex >= d) return false;
+  return dayIndex % everyNDays(med) === 0;
 }
 
 /** Slots that have at least one medicine during the week. */

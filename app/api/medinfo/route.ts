@@ -27,7 +27,7 @@ function plain(html: string, max = 420): string {
 }
 
 export async function GET(req: Request) {
-  if (!allow(clientIp(req), 60, 10 * 60 * 1000)) return Response.json({ error: "Too many requests." }, { status: 429 });
+  if (!allow(`medinfo:${clientIp(req)}`, 60, 10 * 60 * 1000)) return Response.json({ error: "Too many requests." }, { status: 429 });
   const url = new URL(req.url);
   const name = (url.searchParams.get("name") ?? "").slice(0, 120).trim();
   const lang = url.searchParams.get("lang") === "es" ? "es" : "en";

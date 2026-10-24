@@ -2,15 +2,16 @@
 // It lives in server memory, so it resets on redeploy. Good enough for a hackathon demo.
 const hits = new Map<string, number[]>();
 
-export function allow(ip: string, limit: number, windowMs: number): boolean {
+/** `key` should include the route, e.g. "plan:1.2.3.4", so routes don't share one budget. */
+export function allow(key: string, limit: number, windowMs: number): boolean {
   const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < windowMs);
+  const recent = (hits.get(key) ?? []).filter((t) => now - t < windowMs);
   if (recent.length >= limit) {
-    hits.set(ip, recent);
+    hits.set(key, recent);
     return false;
   }
   recent.push(now);
-  hits.set(ip, recent);
+  hits.set(key, recent);
   return true;
 }
 

@@ -25,6 +25,12 @@ describe("calendar reminders", () => {
     const ics = buildIcs(plan([med({ name: "Furosemide", slots: ["morning"], duration_verbatim: "for 5 days, then stop" })]), start);
     expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(5);
   });
+  it("treats 'every 2 days' as every other day, not a 2-day course", () => {
+    const ics = buildIcs(plan([med({ slots: ["morning"], frequency_verbatim: "every 2 days", duration_verbatim: null })]), start);
+    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(4); // days 1, 3, 5, 7
+    const other = buildIcs(plan([med({ slots: ["morning"], frequency_verbatim: "every other day" })]), start);
+    expect(other.match(/BEGIN:VEVENT/g)).toHaveLength(4);
+  });
   it("never includes stopped or as-needed medicines", () => {
     const ics = buildIcs(plan([med({ name: "Amlodipine", status: "stop" }), med({ name: "Acetaminophen", as_needed: true, slots: [] })]), start);
     expect(ics).not.toContain("BEGIN:VEVENT");

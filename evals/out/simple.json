@@ -85,6 +85,7 @@
     }
   ],
   "failures": [],
+  "ingredient_check": "complete",
   "retried": false,
   "first_failures": [],
   "model": "claude-sonnet-5-5"

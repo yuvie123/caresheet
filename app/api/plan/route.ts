@@ -26,7 +26,7 @@ const MAX_FILE_BYTES = 3 * 1024 * 1024;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 
 export async function POST(req: Request) {
-  if (!allow(clientIp(req), 8, 10 * 60 * 1000)) {
+  if (!allow(`plan:${clientIp(req)}`, 8, 10 * 60 * 1000)) {
     return Response.json({ error: "Too many requests. Please wait a few minutes and try again." }, { status: 429 });
   }
 

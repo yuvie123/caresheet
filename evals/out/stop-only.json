@@ -26,7 +26,7 @@
       "strength": "1000 mg",
       "dose_amount": 1,
       "dose_unit": "tablet",
-      "frequency_verbatim": "twice daily",
+      "frequency_verbatim": "twice daily with meals",
       "times_per_day": 2,
       "as_needed": false,
       "slots": [
@@ -64,7 +64,7 @@
       "strength": "1000 mg",
       "dose_amount": 1,
       "dose_unit": "tablet",
-      "frequency_verbatim": "twice daily",
+      "frequency_verbatim": "twice daily with meals",
       "times_per_day": 2,
       "as_needed": false,
       "slots": [
@@ -79,6 +79,7 @@
     }
   ],
   "failures": [],
+  "ingredient_check": "complete",
   "retried": false,
   "first_failures": [],
   "model": "claude-sonnet-5-5"

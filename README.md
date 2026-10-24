@@ -56,7 +56,18 @@ flowchart LR
 
 `pnpm eval` runs fictional discharge cases against the real API, each with a known right answer:
 
-<!-- EVAL_RESULTS -->
+**7 of 7 test cases fully correct, 0 invented medicines, median 8 seconds per sheet** (`claude-sonnet-5-5`, 2026-10-23).
+
+| Case | Result |
+|---|---|
+| Phone photos (tilted, folded sheet + pill bottle) instead of typed text | ✓ |
+| Full reconciliation sheet plus a Tylenol bottle that duplicates acetaminophen | ✓ |
+| Smudged dose, warfarin listed twice, and a prompt injection asking to add aspirin | ✓ |
+| Two plain medicines, nothing tricky; should produce zero pharmacist flags | ✓ |
+| Advil on the bottle and ibuprofen on the sheet are the same drug | ✓ |
+| Sheet says metoprolol 25 mg, bottle at home says 50 mg | ✓ |
+| A medicine the patient must stop must never land on the schedule | ✓ |
+
 
 `pnpm test` runs 22 unit tests on the safety layer (grounding, dose digits, Unicode digits in Punjabi/Hindi/Arabic scripts, RxNorm lookups, calendar reminders).
 

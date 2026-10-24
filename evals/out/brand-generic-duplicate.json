@@ -65,25 +65,18 @@
   "ask_pharmacist": [
     {
       "kind": "duplicate",
-      "issue": "The bottle at home (Advil Liqui-Gels) is a brand of ibuprofen, the same drug as the Ibuprofen on the discharge sheet. Is it safe to have both, and should the Advil bottle be used at all?",
+      "issue": "Advil Liqui-Gels is a brand of ibuprofen, which is also on the discharge sheet. Is it safe to have both at home, and should only one be used? The bottle label says 2 capsules (400 mg) every 4 to 6 hours, while the discharge sheet says 400 mg every 8 hours for 5 days.",
       "quotes": [
-        "Advil Liqui-Gels 200 mg",
-        "Ibuprofen 400 mg"
+        "Ibuprofen 400 mg - take 1 tablet by mouth every 8 hours with food for 5 days.",
+        "Advil Liqui-Gels 200 mg\nTake 2 capsules every 4 to 6 hours while symptoms persist."
       ]
     },
     {
       "kind": "mismatch",
-      "issue": "The bottle says take 2 capsules (400 mg) every 4 to 6 hours, but the discharge sheet says 400 mg every 8 hours for 5 days. Which schedule should be followed?",
+      "issue": "The bottle label's schedule (every 4 to 6 hours, no end date, no mention of food) differs from the discharge sheet's schedule (every 8 hours with food for 5 days). Which should be followed?",
       "quotes": [
-        "Take 2 capsules every 4 to 6 hours while symptoms persist.",
-        "take 1 tablet by mouth every 8 hours with food for 5 days"
-      ]
-    },
-    {
-      "kind": "unclear",
-      "issue": "The Advil bottle label does not say whether to take it with food, and the discharge sheet does not mention it. Please confirm whether the Advil is meant to be used.",
-      "quotes": [
-        "Advil Liqui-Gels 200 mg"
+        "every 4 to 6 hours while symptoms persist",
+        "every 8 hours with food for 5 days"
       ]
     }
   ],
@@ -143,6 +136,7 @@
     }
   ],
   "failures": [],
+  "ingredient_check": "complete",
   "retried": false,
   "first_failures": [],
   "model": "claude-sonnet-5-5"
