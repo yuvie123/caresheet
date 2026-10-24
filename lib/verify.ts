@@ -129,6 +129,38 @@ export function doseNumbersInQuote(med: Medication): boolean {
  * increased. Now take 40 mg" and pill labels with the brand, strength and directions on separate lines,
  * but rejects a number that only appears somewhere else (e.g. "follow up in 2 weeks").
  */
+const UNIT_ALIASES: Record<string, string> = { µg: "mcg", ug: "mcg", mcg: "mcg", mg: "mg", g: "g", ml: "ml", unit: "unit", units: "unit", iu: "iu", meq: "meq", "%": "%" };
+const UNIT_RE = "mg|mcg|µg|ug|g|ml|units?|iu|meq|%";
+
+/**
+ * The unit written right after the strength number in the papers, if it differs from the unit Claude
+ * reported ("25 mcg" in the papers vs "25 mg" from Claude is a 1000x error). Only a positive mismatch counts:
+ * if the papers show no unit after that number (e.g. a Punjabi sheet) this returns null.
+ */
+export function strengthUnitMismatch(med: Medication, text: string): string | null {
+  const m = (med.strength ?? "").match(new RegExp(`(\\d+(?:[.,]\\d+)?)\\s*(${UNIT_RE})\\b`, "i"));
+  if (!m) return null;
+  const n = extractNumbers(m[1])[0];
+  const want = UNIT_ALIASES[m[2].toLowerCase()];
+  const seen = new Set<string>();
+  for (const hit of normalizeDigits(text).matchAll(new RegExp(`(?<![\\d.,])(\\d+(?:[.,]\\d+)?)\\s*(${UNIT_RE})(?![a-z])`, "gi"))) {
+    if (extractNumbers(hit[1])[0] === n) seen.add(UNIT_ALIASES[hit[2].toLowerCase()]);
+  }
+  if (seen.size === 0 || seen.has(want)) return null;
+  return [...seen].join("/");
+}
+
+/** Doses per day implied by the frequency wording, or null if it isn't a plain per-day frequency. */
+export function expectedDailyDoses(freq: string): number | null {
+  const f = freq.toLowerCase();
+  if (/every\s+(?:\d+\s*)?(?:other\s+day|days?|weeks?)|weekly|week\b/.test(f)) return null;
+  if (/\b(once|1\s*(?:time|x)|daily|every\s*24\s*h|qd|od)\b/.test(f) && !/twice|two|three|four|\b[2-4]\s*(?:times|x)/.test(f)) return 1;
+  if (/\b(twice|two\s+times|2\s*(?:times|x)|bid|every\s*12\s*h\w*)\b/.test(f)) return 2;
+  if (/\b(three\s+times|3\s*(?:times|x)|tid|every\s*8\s*h\w*)\b/.test(f)) return 3;
+  if (/\b(four\s+times|4\s*(?:times|x)|qid|every\s*6\s*h\w*)\b/.test(f)) return 4;
+  return null;
+}
+
 const STRENGTH = /\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|g|ml|units?|iu|meq|%)\b/i;
 const LIST_MARKER = /^\s*(?:[-•*·–—]|\d+[.)]\s)/;
 
@@ -149,25 +181,36 @@ function medicineBlock(lines: string[], i: number, extra: number): string {
   return text;
 }
 
-/** The block of text for each place the medicine is named. */
+/**
+ * Indexes of the lines that are ABOUT this medicine: lines that start with its name (ignoring a list
+ * marker), e.g. "- Metoprolol tartrate 25 mg ..." or a pill label's brand line. A line that merely mentions
+ * the name ("Amlodipine - STOP. Now treated with metoprolol") is someone else's line. Only if no line starts
+ * with the name (prose style) do we fall back to every line that mentions it.
+ */
+function lineIndexesFor(med: Medication, lines: string[]): number[] {
+  const words = normalizeForMatch(med.name).split(" ").filter((w) => w.length > 2);
+  if (words.length === 0) return [];
+  const starts: number[] = [];
+  const mentions: number[] = [];
+  lines.forEach((l, i) => {
+    const n = normalizeForMatch(l.replace(LIST_MARKER, ""));
+    if (words.some((w) => n.startsWith(w) || n.indexOf(w) >= 0 && n.indexOf(w) <= 10)) starts.push(i);
+    else if (words.some((w) => n.includes(w))) mentions.push(i);
+  });
+  return starts.length ? starts : mentions;
+}
+
+/** The block of text for each line about the medicine. */
 function linesNaming(med: Medication, doc: string): string[] {
   const lines = doc.split(/\r?\n/);
-  const words = normalizeForMatch(med.name).split(" ").filter((w) => w.length > 2);
-  const out: string[] = [];
-  lines.forEach((l, i) => {
-    if (words.some((w) => normalizeForMatch(l).includes(w))) out.push(medicineBlock(lines, i, 2));
-  });
-  return out;
+  return lineIndexesFor(med, lines).map((i) => medicineBlock(lines, i, 2));
 }
 
 export function numbersGrounded(med: Medication, matchedQuote: string, doc: string): boolean {
   const required = requiredNumbers(med);
   const lines = doc.split(/\r?\n/);
-  const nameWords = normalizeForMatch(med.name).split(" ").filter((w) => w.length > 2);
   const windows: { strength: string; other: string }[] = [{ strength: matchedQuote, other: matchedQuote }];
-  for (let i = 0; i < lines.length; i++) {
-    const line = normalizeForMatch(lines[i]);
-    if (!nameWords.some((w) => line.includes(w))) continue;
+  for (const i of lineIndexesFor(med, lines)) {
     windows.push({
       strength: `${matchedQuote} ${medicineBlock(lines, i, 1)}`,
       other: `${matchedQuote} ${medicineBlock(lines, i, 2)}`,
@@ -212,6 +255,8 @@ export function verifyPlan(plan: Plan): VerifiedPlan {
       reason = `the papers give a range (${doseRangeNear(med, [matched ?? "", ...linesNaming(med, inDoc ? doc : fullTranscript)])}), so CareSheet won't pick one number`;
     else if (!numbersGrounded(med, matched ?? "", inDoc ? doc : fullTranscript))
       reason = "the dose numbers do not appear next to this medicine in the documents";
+    else if (strengthUnitMismatch(med, [matched ?? "", ...linesNaming(med, inDoc ? doc : fullTranscript)].join(" ")))
+      reason = `the strength unit in the papers (${strengthUnitMismatch(med, [matched ?? "", ...linesNaming(med, inDoc ? doc : fullTranscript)].join(" "))}) is different from the one CareSheet read`;
     else if (!quoteIsGrounded(med.name, med.source_quote, 0.5) && !quoteIsGrounded(med.name, fullTranscript, 0.5))
       reason = "the medication name does not appear in the documents";
 
@@ -260,6 +305,28 @@ export function verifyPlan(plan: Plan): VerifiedPlan {
       };
       extraQuestions.push(c);
       allCards.push(c);
+    }
+  }
+
+  // Softer inconsistencies: keep the medicine visible but ask the pharmacist (and mark it "confirm first").
+  const soft = (m: Medication, issue: string) => {
+    if (covered(m, allCards)) return;
+    const c: PharmacistItem = { kind: "unclear", issue, quotes: [m.source_quote] };
+    extraQuestions.push(c);
+    allCards.push(c);
+  };
+  for (const m of verified) {
+    const docText = plan.transcript.find((d) => d.doc_index === m.source_doc)?.text ?? fullTranscript;
+    const block = [m.source_quote, ...linesNaming(m, docText)].join(" ");
+    const label = `${m.name}${m.strength ? ` ${m.strength}` : ""}`;
+    if (m.status !== "stop" && /(?<!then\s)(?<!not\s)(?<!to\s)(?<!and\s)\b(stop|discontinue)\b/i.test(block))
+      soft(m, `The papers for ${label} contain the word "stop" or "discontinue", but CareSheet has it as a medicine to keep taking. Please confirm whether to stop it.`);
+    else if (!m.as_needed && /\b(as needed|prn|when needed|if needed)\b/i.test(block))
+      soft(m, `The papers say ${label} is only taken when needed, but CareSheet has it on a regular schedule. Please confirm.`);
+    else if (!m.as_needed && m.slots.length > 0) {
+      const want = expectedDailyDoses(m.frequency_verbatim);
+      if (want !== null && want !== m.slots.length)
+        soft(m, `${label} is "${m.frequency_verbatim}" in the papers, but CareSheet put it in ${m.slots.length} time${m.slots.length > 1 ? "s" : ""} of day instead of ${want}. Please confirm when to take it.`);
     }
   }
 

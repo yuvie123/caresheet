@@ -268,3 +268,41 @@ describe("a neighbouring medicine's line is not this medicine's evidence", () =>
     expect(run({ dose_amount: 2, source_quote: "Metformin 500 mg - take" }).verified_medications).toHaveLength(0);
   });
 });
+
+describe("semantic checks", () => {
+  const run = (text: string, over: Partial<Medication>) => {
+    const p = plan([]);
+    p.transcript = [{ doc_index: 0, text }];
+    p.medications = [med({ name: "Lisinopril", strength: "10 mg", source_quote: text, ...over })];
+    return verifyPlan(p);
+  };
+  const cardFor = (v: ReturnType<typeof verifyPlan>, re: RegExp) => v.ask_pharmacist.some((c) => re.test(c.issue));
+
+  it("rejects a strength whose unit was swapped (mcg vs mg)", () => {
+    const v = run("Levothyroxine 25 mcg - take 1 tablet daily.", { name: "Levothyroxine", strength: "25 mg", frequency_verbatim: "daily" });
+    expect(v.verified_medications).toHaveLength(0);
+    expect(v.failures[0].reason).toMatch(/unit/);
+  });
+  it("accepts the right unit, mcg/µg spellings, and papers with no unit token", () => {
+    expect(run("Levothyroxine 25 mcg - take 1 tablet daily.", { name: "Levothyroxine", strength: "25 mcg", frequency_verbatim: "daily" }).verified_medications).toHaveLength(1);
+    expect(run("Levothyroxine 25 µg - take 1 tablet daily.", { name: "Levothyroxine", strength: "25 mcg", frequency_verbatim: "daily" }).verified_medications).toHaveLength(1);
+  });
+  it("asks about a medicine whose papers say stop but whose status says continue", () => {
+    const v = run("Lisinopril 10 mg - take 1 tablet daily. STOP taking this medicine. Your pressure is now low.", { status: "continue", frequency_verbatim: "daily" });
+    expect(cardFor(v, /stop/i)).toBe(true);
+  });
+  it("does not treat 'then stop' or 'do not stop' as a stop order", () => {
+    expect(cardFor(run("Lisinopril 10 mg - take 1 tablet daily for 5 days, then stop.", { duration_verbatim: "for 5 days", frequency_verbatim: "daily" }), /stop/i)).toBe(false);
+    expect(cardFor(run("Lisinopril 10 mg - take 1 tablet daily. Do not stop taking this medicine suddenly.", { frequency_verbatim: "daily" }), /stop/i)).toBe(false);
+  });
+  it("asks about an as-needed line that is scheduled as regular", () => {
+    const v = run("Lisinopril 10 mg - take 1 tablet every 6 hours as needed for pain.", { as_needed: false, slots: ["morning"], frequency_verbatim: "every 6 hours" });
+    expect(cardFor(v, /when needed/i)).toBe(true);
+  });
+  it("asks when the number of time slots disagrees with the frequency", () => {
+    const v = run("Lisinopril 10 mg - take 1 tablet three times daily.", { frequency_verbatim: "three times daily", slots: ["morning"] });
+    expect(cardFor(v, /times? of day/i)).toBe(true);
+    const ok = run("Lisinopril 10 mg - take 1 tablet three times daily.", { frequency_verbatim: "three times daily", slots: ["morning", "noon", "evening"] });
+    expect(cardFor(ok, /times? of day/i)).toBe(false);
+  });
+});
