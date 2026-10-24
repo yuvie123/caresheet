@@ -21,10 +21,10 @@ When an elderly parent comes home from hospital, an adult child usually ends up 
 
 You paste the discharge text, or just photograph the pages and the pill bottles. CareSheet gives you:
 
-- **This week**, laid out like a pill organizer: times of day by days, with "for 5 days" medicines ending on day 5.
+- **A daily routine** for the day you pick (Day 1 to 7): Morning, Midday, Evening and Bedtime, with "for 5 days" medicines ending on day 5. Tap any medicine for its exact instructions and the sentence it came from.
 - **A Stop list first**, because medicines the hospital stopped are the easiest to keep taking by mistake.
 - **Ask your pharmacist**: every duplicate (Tylenol and acetaminophen, checked against NIH RxNorm), every sheet-vs-bottle mismatch, every smudged or conflicting dose, each with the exact words from the papers.
-- **A bilingual fridge sheet** in Punjabi, Hindi or Spanish, with tick boxes for each dose of the week, and a second page for the pharmacy counter.
+- **A bilingual fridge sheet** in Punjabi, Hindi or Spanish, with tick boxes for each dose of the week, warning signs and phone numbers, and a third page of questions for the pharmacy counter.
 - **Phone reminders**, a WhatsApp summary for siblings, read-aloud with the phone's own voice, and plain-language drug information from MedlinePlus.
 
 ## How we built it
@@ -41,7 +41,8 @@ We measured it with an eval suite of fictional discharge sheets with known answe
 
 - **Strict vs. useful checking.** Our first verifier was so strict that every run needed a retry: hospital sheets write "Atorvastatin - dose increased. Now take 40 mg", and bottle labels put the brand and strength on separate lines. We loosened it carefully (dose digits must sit on the line naming the medicine, or the next one) and added tests proving an invented dose is still rejected.
 - **Drug databases are messy.** Our first RxNorm query asked for combination products and flooded the screen with ninety "duplicates" (every drug ever combined with acetaminophen). Asking only for ingredients fixed it, and we wrote tests so it can't come back.
-- **Fitting a fridge.** Getting STOP, three times of day, durations and tick boxes onto one printed page in two scripts took several rounds of print-to-PDF checks.
+- **Fitting a fridge.** Getting STOP, the times of day, durations and tick boxes into two scripts on three letter pages took several rounds of print-to-PDF checks, and we pinned the print sizing so a later screen change cannot push it to a fourth page.
+- **Too much on one screen.** Our first results page was a long scroll and a cluttered 7-day grid. We rebuilt it as four tabs with a tap-to-open medicine sheet and a text-size control, after checking every screen at phone, tablet and laptop width.
 - **Venue Wi-Fi** at about 80 KB/s, so we kept dependencies to a minimum.
 
 ## Accomplishments we're proud of

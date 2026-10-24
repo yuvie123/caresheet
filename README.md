@@ -23,11 +23,11 @@ This prototype has not yet been tested with real families; the pilot described b
 ## What it does
 
 1. **Add the papers.** Paste the discharge text, snap photos of the pages and the pill bottles, or upload the patient-portal PDF.
-2. **See the week.** A pill-organizer view: rows are times of day, columns are days. A "for 5 days" medicine disappears after day 5.
-3. **Stop list first.** Medicines are grouped New, Dose changed, Keep taking, and **Stop**, the step families most often miss.
+2. **See the day.** The results are one short screen with four tabs. **Daily routine** shows Morning, Midday, Evening and Bedtime for the day you pick (Day 1 to 7); a "for 5 days" medicine disappears after day 5. Tap any medicine for its dose, times, the exact sentence it came from, and plain-language drug information.
+3. **Stop list first.** A red "Stop taking" strip sits at the top of the routine, and the **All medicines** tab filters New, Dose changed, Keep taking, **Stop** and Unclear, the step families most often miss.
 4. **Same drug twice.** Every medicine is looked up in **NIH RxNorm**: Tylenol on the bottle plus acetaminophen on the sheet becomes a "same ingredient twice" question.
 5. **Ask your pharmacist.** Smudged doses, conflicting doses, sheet-vs-bottle mismatches, hidden instructions, and anything unverified become quoted questions for the pharmacy counter.
-6. **Fridge sheet.** A two-page bilingual printout: page 1 has the STOP list, each time of day, and a row of tick boxes per medicine for the week; page 2 has warning signs, appointments, and the pharmacist questions.
+6. **Fridge sheet.** A three-page bilingual printout: page 1 has the STOP list, each time of day, and a row of tick boxes per medicine for the week; page 2 has warning signs, appointments, phone numbers and a sign-off line; page 3 lists the questions to take to the pharmacy counter.
 7. **Take it home.** Phone calendar reminders for each time of day, a WhatsApp summary for siblings, read-aloud with the phone's own voice, and "What is this medicine?" from **MedlinePlus** (US National Library of Medicine), in English or Spanish.
 
 ## How it checks its work
@@ -99,7 +99,7 @@ CareSheet saves nothing: no accounts and no database. Your papers are sent to th
 
 ## Tech
 
-Next.js 16 (App Router, TypeScript), Tailwind, Anthropic TypeScript SDK with structured outputs (`claude-sonnet-5-5`), zod, NIH RxNav and MedlinePlus Connect APIs, Vitest, Vercel. Fonts: Atkinson Hyperlegible (Braille Institute, for low-vision readers) and Noto Sans Gurmukhi/Devanagari. See [NOTES.md](NOTES.md) for a plain-language walkthrough of every file.
+Next.js 16 (App Router, TypeScript), Tailwind, Anthropic TypeScript SDK with structured outputs (`claude-sonnet-5-5`), zod, NIH RxNav and MedlinePlus Connect APIs, Vitest, Vercel. Fonts: Atkinson Hyperlegible (Braille Institute, for low-vision readers), Inter for digits (so a zero never looks slashed) and Noto Sans Gurmukhi/Devanagari. A Text size control (A, A+, A++) makes the whole page larger for low-vision users without changing the printout. See [NOTES.md](NOTES.md) for a plain-language walkthrough of every file.
 
 ```
 pnpm install

@@ -8,9 +8,9 @@ Live app: https://caresheet.vercel.app · Finished example (no upload, no credit
 
 1. **Open the live site on the laptop and on a phone** (phone on cellular, in case venue Wi-Fi is slow).
 2. **Open `/?example` once on the demo laptop.** Both examples are pre-loaded in the page, so they keep working even if the connection drops afterwards.
-3. **Do one real build:** click **Try: Heart patient + Tylenol bottle**, then **Build the plan**. It should finish in about 15 to 30 seconds. If it says "Live reading is paused", the API credit is used up: use the saved examples and the video (see "If something breaks").
+3. **Do one real build:** under "No papers handy?" click **Heart patient + Tylenol bottle**, then **Build the plan**. It should finish in about 15 to 30 seconds. If it says "Live reading is paused", the API credit is used up: use the saved examples and the video (see "If something breaks").
 4. **Check the credit** at console.anthropic.com (Plans and billing). Keep a few dollars available. Each sheet costs only a few cents.
-5. **Print once** (Print for the fridge) to see the three-page output on paper. Bring one printed copy to the table.
+5. **Print once** (Fridge sheet tab, then Print for the fridge) to see the three-page output on paper. Bring one printed copy to the table.
 6. **Open the demo video** in another tab: <!-- VIDEO_URL -->
 7. **Charge everything**, sit near an outlet, and turn off notification pop-ups.
 
@@ -21,13 +21,13 @@ Live app: https://caresheet.vercel.app · Finished example (no upload, no credit
 
 **0:15 Show it working (60 s).**
 - Click the heart sample (discharge sheet + Tylenol bottle). Click Build the plan. Point at the live steps: *reading, checking every line against the papers, looking up ingredients in RxNorm.*
-- **The pill organizer**: "This is the week, laid out like the pill box on the counter." Tap a medicine: "Every medicine shows the exact sentence it came from."
+- **The Daily routine tab**: "This is the day, morning to bedtime; pick any of the seven days." Tap a medicine: "Every medicine shows the exact sentence it came from."
 - **Red Stop list**: "Amlodipine and aspirin were stopped in hospital. Medicines like that are easy to keep taking by mistake."
 - **Ask your pharmacist**: "The Tylenol bottle and the acetaminophen on the sheet are the same drug, checked against NIH's drug database. CareSheet doesn't decide; it hands the pharmacist a quoted question."
 - **Fridge sheet in Punjabi**, then Print or Send to WhatsApp.
 
 **1:15 The safety story (30 s).**
-Click **See the messy-sheet example** (instant, no waiting).
+Click **Messy sheet, finished plan** on the home screen (instant, no waiting).
 "This sheet has a smudged dose, a blood thinner listed twice, and a hidden line telling the AI to add aspirin. The aspirin never enters the plan. The doubtful medicines stay visible with a Confirm-first badge and a quoted question for the pharmacist, and they get no phone reminders. Numbers are never translated, only words, so a translation can't change a dose."
 
 **1:45 Impact (15 s).**
