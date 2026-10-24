@@ -24,7 +24,8 @@ export function findQuote(quote: string, transcript: string, threshold = 0.85): 
   const q = normalizeForMatch(quote);
   const t = normalizeForMatch(transcript);
   if (!q) return null;
-  if (t.includes(q)) return q;
+  // Whole words only: "warfarin 5" must NOT match inside "warfarin 50".
+  if (` ${t} `.includes(` ${q} `)) return q;
 
   const qWords = q.split(" ");
   const tWords = t.split(" ");

@@ -34,7 +34,10 @@ export function normalizeDigits(text: string): string {
  */
 export function extractNumbers(text: string): string[] {
   const normalized = normalizeDigits(text)
-    // decimal comma between digits ("2,5") becomes a dot
+    // thousands separators: "1,000" / "5,000" / "1,000,000" -> 1000 / 5000 / 1000000
+    // (a leading 0 is a decimal comma instead: "0,125" is 0.125, handled below)
+    .replace(/(?<![\d.,])([1-9]\d{0,2})((?:,\d{3})+)(?![\d])/g, (_m, head: string, rest: string) => head + rest.replace(/,/g, ""))
+    // decimal comma between digits ("2,5" -> "2.5", "0,125" -> "0.125")
     .replace(/(\d),(\d)/g, "$1.$2");
   const matches = normalized.match(/\d+(?:\.\d+)?/g) ?? [];
   return matches.map((n) => String(Number(n)));

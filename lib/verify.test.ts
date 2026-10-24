@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { extractNumbers, introducesNewNumber, normalizeDigits } from "./digits";
 import type { Medication, Plan } from "./schema";
-import { doseNumbersInQuote, normalizeForMatch, quoteIsGrounded, verifyPlan } from "./verify";
+import { doseNumbersInQuote, findQuote, normalizeForMatch, quoteIsGrounded, verifyPlan } from "./verify";
 
 const med = (over: Partial<Medication>): Medication => ({
   name: "Metoprolol tartrate",
@@ -143,5 +143,21 @@ describe("verifyPlan", () => {
     const p = plan([med({})]);
     p.warning_signs.push({ text: "Rash", source_quote: "Stop if you get a rash" });
     expect(verifyPlan(p).warning_signs).toHaveLength(1);
+  });
+});
+
+describe("quote matching respects word boundaries", () => {
+  it("does not match a truncated number inside a longer one", () => {
+    expect(findQuote("Warfarin 5", "Warfarin 50 mg take 1 tablet daily")).toBeNull();
+    expect(quoteIsGrounded("Lisinopril take 1", "Lisinopril take 10 mg daily")).toBe(false);
+  });
+  it("still matches a whole-word quote", () => {
+    expect(quoteIsGrounded("Warfarin 5 mg", "Warfarin 5 mg take 1 tablet daily")).toBe(true);
+  });
+  it("rejects a medicine whose strength was truncated mid-number", () => {
+    const p = plan([]);
+    p.transcript[0].text = "Warfarin 50 mg - take 1 tablet by mouth daily.";
+    p.medications = [med({ name: "Warfarin", strength: "5 mg", source_quote: "Warfarin 5", dose_amount: 1 })];
+    expect(verifyPlan(p).verified_medications).toHaveLength(0);
   });
 });
