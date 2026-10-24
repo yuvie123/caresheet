@@ -29,6 +29,13 @@ export const UI_STRINGS = {
   page2_title: "Also important",
   confirm_first: "Confirm with the pharmacist first",
   unscheduled_title: "Ask the pharmacist when to take",
+  emergency_line: "Chest pain, trouble breathing, fainting or heavy bleeding: call 911 now.",
+  phones_title: "Phone numbers",
+  doctor: "Doctor",
+  pharmacy: "Pharmacy",
+  reviewed_title: "Pharmacist has gone through this sheet",
+  name_date: "Name and date",
+  from_papers: "From the papers",
 } as const;
 
 export type UiKey = keyof typeof UI_STRINGS;
@@ -127,16 +134,33 @@ export function stoppedMeds(plan: PlanResult): Medication[] {
   return plan.verified_medications.filter((m) => m.status === "stop");
 }
 
-/** Every English string the fridge sheet needs translated, keyed by a stable id. No ids carry numbers. */
+/** Limits of /api/translate. Keep in sync with app/api/translate/route.ts. */
+export const TRANSLATE_MAX_KEYS = 120;
+export const TRANSLATE_MAX_VALUE = 500;
+
+/**
+ * Every English string the fridge sheet needs translated, keyed by a stable id. No ids carry numbers.
+ * Kept within the endpoint's limits (one long sentence or a very long list must never make the whole
+ * translation fail): fixed labels first, then warnings and follow-ups, then lines for medicines still being
+ * taken, then the pharmacist questions. Anything over the limits is simply shown in English.
+ */
 export function translatableStrings(plan: PlanResult): Record<string, string> {
-  const out: Record<string, string> = { ...UI_STRINGS };
+  // Priority order matters when a long list hits the cap: labels, then safety text, then the rest.
+  const entries: [string, string][] = Object.entries(UI_STRINGS);
+  plan.warning_signs.forEach((w, i) => entries.push([`warn_${i}`, w.text]));
+  plan.follow_ups.forEach((f, i) => entries.push([`follow_${i}`, f.text]));
   plan.verified_medications.forEach((m, i) => {
-    if (m.dose_unit) out[`unit_${i}`] = m.dose_unit;
-    out[`freq_${i}`] = m.frequency_verbatim;
-    if (m.duration_verbatim) out[`dur_${i}`] = m.duration_verbatim;
+    if (m.status === "stop") return; // stopped medicines are listed by name only
+    if (m.dose_unit) entries.push([`unit_${i}`, m.dose_unit]);
+    entries.push([`freq_${i}`, m.frequency_verbatim]);
+    if (m.duration_verbatim) entries.push([`dur_${i}`, m.duration_verbatim]);
   });
-  plan.warning_signs.forEach((w, i) => (out[`warn_${i}`] = w.text));
-  plan.follow_ups.forEach((f, i) => (out[`follow_${i}`] = f.text));
+  plan.ask_pharmacist.slice(0, 8).forEach((q, i) => entries.push([`pharm_${i}`, q.issue]));
+  const out: Record<string, string> = {};
+  for (const [k, v] of entries) {
+    if (Object.keys(out).length >= TRANSLATE_MAX_KEYS) break;
+    if (v && v.length <= TRANSLATE_MAX_VALUE) out[k] = v;
+  }
   return out;
 }
 

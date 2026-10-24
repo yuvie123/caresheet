@@ -1,6 +1,8 @@
-// The printout. Page 1 goes on the fridge: STOP first, then each time of day with a row of tick
-// boxes for the week. Page 2 holds as-needed medicines, warning signs, appointments, and the
-// questions to hand to the pharmacist. Numbers come from code; only words are translated.
+// The printout, up to three sheets with one purpose each:
+//   1. Fridge: STOP first, then each time of day with a row of tick boxes for the week.
+//   2. Also important: unscheduled and as-needed medicines, warning signs, appointments, 911, phone numbers.
+//   3. For the pharmacist: the questions, each quoting the papers, plus a sign-off line.
+// Numbers come from code; only words are translated.
 "use client";
 import type { PlanResult } from "@/lib/claude";
 import {
@@ -17,18 +19,26 @@ import {
   type UiKey,
 } from "@/lib/render";
 import type { Medication, Slot } from "@/lib/schema";
-import { Ban, Plate, Question, SLOT_ICON, SLOT_LID } from "./Icons";
+import { Ban, Plate, SLOT_ICON, SLOT_LID } from "./Icons";
 
 type T = Record<string, string | null>;
 const DAYS = [0, 1, 2, 3, 4, 5, 6];
 
-/** English plus the translation underneath, or just English if the translation was rejected. */
-function Bi({ id, en, t, className }: { id: string; en: string; t: T | null; className?: string }) {
+/** English plus the translation underneath (or beside it with `inline`); English only if the translation was rejected. */
+function Bi({ id, en, t, className, inline }: { id: string; en: string; t: T | null; className?: string; inline?: boolean }) {
   const tr = t?.[id];
+  const show = Boolean(tr && tr !== en);
+  if (inline)
+    return (
+      <span className={className}>
+        {en}
+        {show ? <span> · {tr}</span> : null}
+      </span>
+    );
   return (
     <span className={className}>
       <span className="block">{en}</span>
-      {tr && tr !== en ? <span className="block text-[0.95em]">{tr}</span> : null}
+      {show ? <span className="block text-[0.95em]">{tr}</span> : null}
     </span>
   );
 }
@@ -61,6 +71,11 @@ function MedLine({ med, index, slot, t, doubtful }: { med: Medication; index: nu
         <span className="font-bold">{med.name}</span> {med.strength}
         {med.with_food === "with_food" ? (
           <Plate className="ml-1 inline h-4 w-4 align-[-2px]" title={UI_STRINGS.with_food} />
+        ) : null}
+        {med.with_food !== "not_stated" ? (
+          <div className="text-[0.85em] font-bold">
+            <Bi inline id={med.with_food === "with_food" ? "with_food" : "empty_stomach"} en={med.with_food === "with_food" ? UI_STRINGS.with_food : UI_STRINGS.empty_stomach} t={t} />
+          </div>
         ) : null}
         <div className="text-[0.85em] text-muted">
           <Bi id={`freq_${index}`} en={med.frequency_verbatim} t={t} />
@@ -221,24 +236,67 @@ export default function FridgeSheet({
           </section>
         </div>
 
-        {plan.ask_pharmacist.length ? (
-          <section className="mt-5 rounded-lg border-2 border-ask bg-ask-wash px-4 py-3">
-            <h3 className="flex items-center gap-2 font-bold text-ask">
-              <Question className="h-5 w-5" /> {label("pharmacist_title")}
+        <p className="mt-3 rounded-lg border-2 border-stop px-3 py-1.5 font-bold text-stop">
+          <Bi id="emergency_line" en={UI_STRINGS.emergency_line} t={translations} />
+        </p>
+
+        <section className="mt-5 grid gap-4 sm:grid-cols-2 print:grid-cols-2">
+          <div className="rounded-lg border-2 border-ink px-3 py-2">
+            <h3 className="font-bold">
+              <Bi id="phones_title" en={UI_STRINGS.phones_title} t={translations} />
             </h3>
-            <ol className="mt-2 list-decimal space-y-2 pl-5">
+            {(["doctor", "pharmacy"] as const).map((k) => (
+              <div key={k} className="mt-2 flex items-end gap-2">
+                <span className="shrink-0 text-sm">
+                  <Bi id={k} en={UI_STRINGS[k]} t={translations} />
+                </span>
+                <span className="h-6 flex-1 border-b-2 border-ink" />
+              </div>
+            ))}
+            <div className="mt-2 text-sm">911</div>
+          </div>
+        </section>
+      </article>
+
+      {/* ---------- Page 3: for the pharmacist ---------- */}
+      {plan.ask_pharmacist.length ? (
+        <article
+          className="mx-auto max-w-[8.5in] bg-paper p-4 text-ink sm:p-6 print:break-before-page print:p-0"
+          aria-label="Fridge sheet, page 3: for the pharmacist"
+        >
+          <h2 className="border-b-4 border-ink pb-2 text-2xl font-bold">{label("pharmacist_title")}</h2>
+        {plan.ask_pharmacist.length ? (
+          <section className="mt-3 rounded-lg border-2 border-ask bg-ask-wash px-4 py-3">
+            <ol className="list-decimal space-y-2 pl-5">
               {plan.ask_pharmacist.map((q, i) => (
                 <li key={i}>
                   {q.issue}
+                  {translations?.[`pharm_${i}`] ? <span className="block text-[0.95em]">{translations[`pharm_${i}`]}</span> : null}
                   {q.quotes.length ? (
-                    <span className="block text-sm text-muted">From the papers: &ldquo;{q.quotes.join("” / “")}&rdquo;</span>
+                    <span className="block text-sm text-muted">{UI_STRINGS.from_papers}: &ldquo;{q.quotes.join("” / “")}&rdquo;</span>
                   ) : null}
                 </li>
               ))}
             </ol>
           </section>
         ) : null}
-      </article>
+
+        <section className="mt-5 max-w-lg">
+          <div className="rounded-lg border-2 border-ink px-3 py-2">
+            <h3 className="font-bold">
+              <Bi id="reviewed_title" en={UI_STRINGS.reviewed_title} t={translations} />
+            </h3>
+            <div className="mt-2 flex items-end gap-2">
+              <span className="h-5 w-5 shrink-0 rounded-[3px] border-2 border-ink" />
+              <span className="shrink-0 text-sm">
+                <Bi id="name_date" en={UI_STRINGS.name_date} t={translations} />
+              </span>
+              <span className="h-6 flex-1 border-b-2 border-ink" />
+            </div>
+          </div>
+        </section>
+        </article>
+      ) : null}
     </div>
   );
 }

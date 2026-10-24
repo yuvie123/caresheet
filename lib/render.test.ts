@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PlanResult } from "./claude";
-import { activeOnDay, cadenceUnclear, durationDays, everyNDays, scheduledMeds, unscheduledMeds } from "./render";
+import { activeOnDay, cadenceUnclear, durationDays, everyNDays, scheduledMeds, TRANSLATE_MAX_KEYS, TRANSLATE_MAX_VALUE, translatableStrings, unscheduledMeds } from "./render";
 import type { Medication } from "./schema";
 
 const med = (over: Partial<Medication>): Medication => ({
@@ -56,5 +56,34 @@ describe("unclear cadence and unscheduled medicines", () => {
     ];
     expect(scheduledMeds(plan(meds)).map((m) => m.name)).toEqual(["A"]);
     expect(unscheduledMeds(plan(meds)).map((m) => m.name)).toEqual(["NoSlots", "Weekdays"]);
+  });
+});
+
+describe("translatableStrings stays within the endpoint limits", () => {
+  const big = (n: number): PlanResult =>
+    ({
+      verified_medications: Array.from({ length: n }, (_, i) => med({ name: `Med${i}`, dose_unit: "tablet", duration_verbatim: "for 5 days" })),
+      ask_pharmacist: Array.from({ length: 12 }, (_, i) => ({ kind: "unclear", issue: `Question ${i}`, quotes: [] })),
+      warning_signs: [{ text: "x".repeat(800), source_quote: "x" }, { text: "Chest pain", source_quote: "x" }],
+      follow_ups: [{ text: "See the doctor", source_quote: "x" }],
+    }) as unknown as PlanResult;
+  for (const n of [1, 12, 40]) {
+    it(`${n} medicines: keys valid, values short, count capped`, () => {
+      const s = translatableStrings(big(n));
+      expect(Object.keys(s).length).toBeLessThanOrEqual(TRANSLATE_MAX_KEYS);
+      for (const [k, v] of Object.entries(s)) {
+        expect(k).toMatch(/^[a-z_0-9]{1,40}$/);
+        expect(v.length).toBeLessThanOrEqual(TRANSLATE_MAX_VALUE);
+      }
+      expect(Object.keys(s)).toContain("warn_1"); // the short warning still goes through
+      expect(Object.keys(s)).not.toContain("warn_0"); // the 800-character one is skipped, not fatal
+    });
+  }
+  it("includes pharmacist questions and skips stopped medicines' lines", () => {
+    const p = { ...big(2), verified_medications: [med({ name: "A" }), med({ name: "B", status: "stop" })] } as unknown as PlanResult;
+    const keys = Object.keys(translatableStrings(p));
+    expect(keys).toContain("pharm_0");
+    expect(keys).toContain("freq_0");
+    expect(keys).not.toContain("freq_1");
   });
 });

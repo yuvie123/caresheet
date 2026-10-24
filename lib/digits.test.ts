@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractNumbers } from "./digits";
+import { extractNumbers, numbersMatch } from "./digits";
 
 describe("extractNumbers: separators", () => {
   it("reads thousands separators as one number", () => {
@@ -30,5 +30,18 @@ describe("extractNumbers: fractions", () => {
   it("leaves dates and other slashes alone", () => {
     expect(extractNumbers("10/12/2026")).toEqual(["10", "12", "2026"]);
     expect(extractNumbers("120/80 mmHg")).toEqual(["120", "80"]);
+  });
+});
+
+describe("numbersMatch (two-sided translation guard)", () => {
+  it("accepts the same numbers in any script", () => {
+    expect(numbersMatch("more than 6 tablets in 24 hours", "24 ਘੰਟਿਆਂ ਵਿੱਚ ੬ ਤੋਂ ਵੱਧ ਗੋਲੀਆਂ ਨਹੀਂ")).toBe(true);
+    expect(numbersMatch("Take with food", "ਭੋਜਨ ਨਾਲ ਲਓ")).toBe(true);
+  });
+  it("rejects a dropped number", () => {
+    expect(numbersMatch("more than 6 tablets in 24 hours", "24 ਘੰਟਿਆਂ ਵਿੱਚ ਵੱਧ ਗੋਲੀਆਂ ਨਹੀਂ")).toBe(false);
+  });
+  it("rejects an added number", () => {
+    expect(numbersMatch("Take with food", "ਦਿਨ ਵਿੱਚ ੨ ਵਾਰ ਲਓ")).toBe(false);
   });
 });

@@ -3,6 +3,7 @@
 // which happens when a translation tried to add a number the English didn't have.
 import { z } from "zod";
 import { LANGUAGES, translateStrings, type LanguageCode } from "@/lib/claude";
+import { TRANSLATE_MAX_KEYS, TRANSLATE_MAX_VALUE } from "@/lib/render";
 import { allow, clientIp } from "@/lib/ratelimit";
 
 export const maxDuration = 60;
@@ -15,8 +16,8 @@ export async function POST(req: Request) {
   const Body = z.object({
     language: z.enum(Object.keys(LANGUAGES) as [LanguageCode, ...LanguageCode[]]),
     strings: z
-      .record(z.string().regex(/^[a-z_0-9]{1,40}$/), z.string().max(500))
-      .refine((r) => Object.keys(r).length <= 120, "too many strings")
+      .record(z.string().regex(/^[a-z_0-9]{1,40}$/), z.string().max(TRANSLATE_MAX_VALUE))
+      .refine((r) => Object.keys(r).length <= TRANSLATE_MAX_KEYS, "too many strings")
       .refine((r) => Object.values(r).reduce((n, v) => n + v.length, 0) <= 20_000, "too much text"),
   });
   const parsed = Body.safeParse(await req.json().catch(() => null));

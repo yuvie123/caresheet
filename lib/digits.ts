@@ -65,3 +65,13 @@ export function introducesNewNumber(english: string, translated: string): boolea
   const allowed = new Set(extractNumbers(english));
   return extractNumbers(translated).some((n) => !allowed.has(n));
 }
+
+/**
+ * True if the translation contains exactly the same numbers as the English: none added AND none dropped.
+ * A dropped "6" in "do not take more than 6 tablets" is as dangerous as an invented one.
+ */
+export function numbersMatch(english: string, translated: string): boolean {
+  const a = new Set(extractNumbers(english));
+  const b = new Set(extractNumbers(translated));
+  return a.size === b.size && [...a].every((n) => b.has(n));
+}
