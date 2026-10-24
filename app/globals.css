@@ -8,6 +8,7 @@
   --color-ink: #17212b;
   --color-muted: #52606d;
   --color-rule: #cfd8de;
+  --color-field: #6b7a88; /* borders of inputs and thumbnails: 4:1 against white (WCAG 1.4.11) */
   --color-action: #1f5f7a; /* pharmacy blue for buttons and links */
   --color-stop: #b42318;
   --color-stop-wash: #fdecea;

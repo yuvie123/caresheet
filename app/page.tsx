@@ -51,6 +51,7 @@ export default function Home() {
   const [translateError, setTranslateError] = useState(false);
   const translateRequest = useRef(0); // ignore replies for a language that's no longer selected
   const resultsRef = useRef<HTMLDivElement>(null);
+  const reduceMotion = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const langName = LANGS.find((l) => l.code === lang)?.name.split(" ").slice(1).join(" ") || null;
   // Language label only when a translation is actually showing.
@@ -124,7 +125,10 @@ export default function Home() {
       setTranslateError(false);
       setTranslating(false);
       setStatus("done");
-      requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }));
+      requestAnimationFrame(() => {
+            resultsRef.current?.scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" });
+            document.getElementById("week")?.focus({ preventScroll: true });
+          });
     } catch {
       setError("The saved example couldn't be loaded. Check the connection and try again.");
       setStatus("error");
@@ -136,6 +140,8 @@ export default function Home() {
     if (!new URLSearchParams(window.location.search).has("example")) return;
     const t = setTimeout(() => void showSavedExample(), 0); // after first render, not during it
     return () => clearTimeout(t);
+    // Runs once on load; showSavedExample only uses setters and a ref, so it is safe to omit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function translate(p: PlanResult, code: string) {
@@ -212,7 +218,10 @@ export default function Home() {
           gotResult = true;
           setPlan(msg.result);
           setStatus("done");
-          requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }));
+          requestAnimationFrame(() => {
+            resultsRef.current?.scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" });
+            document.getElementById("week")?.focus({ preventScroll: true });
+          });
           void translate(msg.result, lang);
         }
       };
@@ -251,6 +260,9 @@ export default function Home() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">
+      <p role="status" aria-live="polite" className="sr-only">
+        {status === "working" ? "Reading the papers, please wait." : status === "done" && plan ? `Your plan is ready: ${plan.verified_medications.length} medicines and ${plan.ask_pharmacist.length} questions for the pharmacist.` : ""}
+      </p>
       <div className="no-print">
         <header className="max-w-2xl">
           <h1 className="text-4xl font-bold leading-tight sm:text-5xl">CareSheet</h1>
@@ -276,7 +288,7 @@ export default function Home() {
                 onChange={(e) => setTexts((prev) => prev.map((x, j) => (j === i ? e.target.value : x)))}
                 rows={i === 0 ? 8 : 3}
                 placeholder={i === 0 ? "Paste the discharge medication list here, or add photos below." : ""}
-                className="mt-1 block w-full rounded-lg border-2 border-rule bg-wash/40 p-3 text-base focus:border-action"
+                className="mt-1 block w-full rounded-lg border-2 border-field bg-wash/40 p-3 text-base focus:border-action"
               />
             </label>
           ))}
@@ -308,7 +320,7 @@ export default function Home() {
           <label className="mt-5 block max-w-sm">
             <span className="font-bold">Your parent&apos;s language</span>
             <select value={lang} onChange={(e) => { setLang(e.target.value); if (plan) void translate(plan, e.target.value); }}
-              className="mt-1 block w-full rounded-lg border-2 border-rule bg-paper p-2.5 text-base">
+              className="mt-1 block w-full rounded-lg border-2 border-field bg-paper p-2.5 text-base">
               {LANGS.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
             </select>
           </label>
@@ -318,6 +330,7 @@ export default function Home() {
               className="rounded-xl bg-action px-6 py-3 text-lg font-bold text-white disabled:opacity-40">
               {status === "working" ? "Building the plan…" : "Build the plan"}
             </button>
+            {!canRun && status !== "working" ? <span className="text-muted">Add the papers first (paste text or add a photo).</span> : null}
             <span className="text-muted">No papers handy?</span>
             {(Object.keys(SAMPLES) as (keyof typeof SAMPLES)[]).map((k) => (
               <button key={k} type="button" onClick={() => loadSample(k)} className="text-action underline">
@@ -368,7 +381,7 @@ export default function Home() {
               </p>
             ) : null}
             <section aria-labelledby="week">
-              <h2 id="week" className="text-3xl font-bold">This week</h2>
+              <h2 id="week" tabIndex={-1} className="text-3xl font-bold outline-none">This week</h2>
               <p className="mb-4 text-muted">
                 {plan.verified_medications.length} medicines checked against the papers
                 {plan.ask_pharmacist.length ? `, ${plan.ask_pharmacist.length} things to ask the pharmacist` : ""}.
@@ -434,7 +447,7 @@ export default function Home() {
                 Reminders go into your own phone calendar at 8:00, 12:30, 18:00 and 21:30 for the next week. You can change the times there.
               </p>
               <div className="mt-4 rounded-2xl bg-wash p-2 shadow-inner sm:p-4">
-                <FridgeSheet plan={plan} translations={translations} languageName={shownLangName} isExample={isExample} />
+                <FridgeSheet plan={plan} translations={translations} languageName={shownLangName} langCode={lang} isExample={isExample} />
               </div>
             </section>
 
@@ -450,7 +463,7 @@ export default function Home() {
           </div>
 
           <div className="print-only">
-            <FridgeSheet plan={plan} translations={translations} languageName={shownLangName} isExample={isExample} />
+            <FridgeSheet plan={plan} translations={translations} languageName={shownLangName} langCode={lang} isExample={isExample} />
           </div>
         </div>
       ) : null}

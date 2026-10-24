@@ -4,6 +4,7 @@
 //   3. For the pharmacist: the questions, each quoting the papers, plus a sign-off line.
 // Numbers come from code; only words are translated.
 "use client";
+import { createContext, useContext } from "react";
 import type { PlanResult } from "@/lib/claude";
 import {
   activeOnDay,
@@ -22,23 +23,27 @@ import type { Medication, Slot } from "@/lib/schema";
 import { Ban, Plate, SLOT_ICON, SLOT_LID } from "./Icons";
 
 type T = Record<string, string | null>;
+
+// The language code of the translation, so translated text can be tagged lang="pa" for screen readers.
+const LangCtx = createContext<string>("");
 const DAYS = [0, 1, 2, 3, 4, 5, 6];
 
 /** English plus the translation underneath (or beside it with `inline`); English only if the translation was rejected. */
 function Bi({ id, en, t, className, inline }: { id: string; en: string; t: T | null; className?: string; inline?: boolean }) {
   const tr = t?.[id];
   const show = Boolean(tr && tr !== en);
+  const lang = useContext(LangCtx) || undefined;
   if (inline)
     return (
       <span className={className}>
         {en}
-        {show ? <span> · {tr}</span> : null}
+        {show ? <span lang={lang}> · {tr}</span> : null}
       </span>
     );
   return (
     <span className={className}>
       <span className="block">{en}</span>
-      {show ? <span className="block text-[0.95em]">{tr}</span> : null}
+      {show ? <span lang={lang} className="block text-[0.95em] leading-normal">{tr}</span> : null}
     </span>
   );
 }
@@ -109,11 +114,13 @@ export default function FridgeSheet({
   plan,
   translations,
   languageName,
+  langCode = "",
   isExample = false,
 }: {
   plan: PlanResult;
   translations: T | null;
   languageName: string | null;
+  langCode?: string;
   isExample?: boolean;
 }) {
   const all = plan.verified_medications;
@@ -125,6 +132,7 @@ export default function FridgeSheet({
   const unscheduled = unscheduledMeds(plan);
 
   return (
+    <LangCtx.Provider value={translations ? langCode : ""}>
     <div className="space-y-6 print:block print:space-y-0">
       {/* ---------- Page 1: the fridge ---------- */}
       <article className="mx-auto max-w-[8.5in] bg-paper p-4 text-ink sm:p-6 print:p-0" aria-label="Fridge sheet, page 1">
@@ -271,7 +279,7 @@ export default function FridgeSheet({
               {plan.ask_pharmacist.map((q, i) => (
                 <li key={i}>
                   {q.issue}
-                  {translations?.[`pharm_${i}`] ? <span className="block text-[0.95em]">{translations[`pharm_${i}`]}</span> : null}
+                  {translations?.[`pharm_${i}`] ? <span lang={langCode || undefined} className="block text-[0.95em] leading-normal">{translations[`pharm_${i}`]}</span> : null}
                   {q.quotes.length ? (
                     <span className="block text-sm text-muted">{UI_STRINGS.from_papers}: &ldquo;{q.quotes.join("” / “")}&rdquo;</span>
                   ) : null}
@@ -298,5 +306,6 @@ export default function FridgeSheet({
         </article>
       ) : null}
     </div>
+    </LangCtx.Provider>
   );
 }
