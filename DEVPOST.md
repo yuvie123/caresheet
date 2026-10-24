@@ -14,8 +14,11 @@ Copy each section into the matching Devpost field. Replace anything in <!-- comm
 
 ## Inspiration
 
-<!-- TEAM: replace this paragraph with your real story, in your own words. -->
-When an elderly parent comes home from hospital, an adult child usually ends up running the pills. The discharge papers list new medicines, changed doses, and medicines to stop, in clinical English. The kitchen still has the old bottles, sometimes under brand names that hide the fact they're the same drug. For families where the parent reads Punjabi or Hindi or Spanish instead of English, every instruction has to pass through one tired person. About one in five medical patients has an adverse event in the first weeks after discharge, and about two thirds of those are drug-related.
+Picture the evening a parent comes home from hospital. The discharge papers run to several pages of clinical English: two new medicines, one changed dose, two to stop. The kitchen cabinet still holds the old bottles, one under a brand name that hides the fact it is the same drug as something on the new list. The parent reads Punjabi, not English, so every instruction has to pass through a tired son or daughter who is also trying to work out which pills go where, and when. (This is an illustrative scenario, not a specific family.)
+
+That ordinary evening is where doses get doubled and stopped medicines quietly keep being taken. About one in five medical patients has an adverse event in the first weeks after discharge, and about two thirds of those are drug-related. We built CareSheet for that evening: a plan every line of which traces back to the hospital's own words, with anything uncertain handed to the pharmacist instead of guessed, and a sheet for the fridge in the parent's language.
+
+<!-- Optional: if a teammate has a true personal experience and is happy to share it, add one real sentence here. Do not add one that is not true. -->
 
 ## What it does
 

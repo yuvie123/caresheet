@@ -16,7 +16,7 @@ When an elderly parent comes home from hospital, an adult child usually ends up 
 
 This prototype has not yet been tested with real families; the pilot described below is how we will.
 
-<!-- TEAM: add the real story here (one or two sentences, with permission). -->
+Picture the evening a parent comes home from hospital: several pages of clinical English, two new medicines, one changed dose, two to stop, old bottles still in the cabinet, and a parent who reads Punjabi. Every instruction passes through one tired family member. That ordinary evening is who CareSheet is for. (An illustrative scenario, not a specific family.)
 
 **Community:** adult children caring for an elderly parent who doesn't read English well, in the first week after a hospital discharge. We started with Punjabi-speaking families, plus Hindi and Spanish.
 
