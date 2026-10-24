@@ -1,12 +1,22 @@
 import type { Metadata } from "next";
-import { Atkinson_Hyperlegible, Noto_Sans_Devanagari, Noto_Sans_Gurmukhi } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
+// Fonts are bundled with the app (app/fonts) instead of downloaded at build time, so a build never
+// depends on Google's servers and the first paint doesn't wait on a third party.
 // Atkinson Hyperlegible was designed by the Braille Institute for readers with low vision.
-const atkinson = Atkinson_Hyperlegible({ variable: "--font-atkinson", subsets: ["latin"], weight: ["400", "700"] });
-// Punjabi and Hindi need their own fonts or they print as empty boxes.
-const gurmukhi = Noto_Sans_Gurmukhi({ variable: "--font-gurmukhi", subsets: ["gurmukhi"], weight: ["400", "700"] });
-const devanagari = Noto_Sans_Devanagari({ variable: "--font-devanagari", subsets: ["devanagari"], weight: ["400", "700"] });
+const atkinson = localFont({
+  variable: "--font-atkinson",
+  display: "swap",
+  src: [
+    { path: "./fonts/Atkinson-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/Atkinson-700.woff2", weight: "700", style: "normal" },
+  ],
+});
+// Punjabi and Hindi need their own fonts or they print as empty boxes. Each file is a variable font
+// covering both weights.
+const gurmukhi = localFont({ variable: "--font-gurmukhi", display: "swap", src: "./fonts/NotoSansGurmukhi.woff2", weight: "400 700" });
+const devanagari = localFont({ variable: "--font-devanagari", display: "swap", src: "./fonts/NotoSansDevanagari.woff2", weight: "400 700" });
 
 const TITLE = "CareSheet: hospital papers to a medicine plan families can follow";
 const DESCRIPTION =

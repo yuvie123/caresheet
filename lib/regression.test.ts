@@ -15,11 +15,12 @@ const fixtures: { name: string; plan: Plan }[] = [
     .filter((f) => f.endsWith(".json"))
     .map((f) => ({ name: `eval:${f.replace(".json", "")}`, plan: load(`evals/out/${f}`) as Plan })),
   { name: "demo:heart", plan: load("public/demo/heart.json").plan as Plan },
+  { name: "demo:messy", plan: load("public/demo/messy.json").plan as Plan },
 ];
 
 describe("verifier regression on saved real outputs", () => {
   it("has fixtures to check", () => {
-    expect(fixtures.length).toBeGreaterThanOrEqual(6);
+    expect(fixtures.length).toBeGreaterThanOrEqual(7);
   });
 
   for (const { name, plan } of fixtures) {

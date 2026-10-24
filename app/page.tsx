@@ -108,15 +108,28 @@ export default function Home() {
     setFiles([]);
   }
 
-  // A real result saved from the live site (fictional patient). Shown instantly, no API call:
-  // useful for anyone browsing, and the backup if Wi-Fi or credits fail during a demo.
-  // It is clearly labelled as an example everywhere, including the printout.
-  async function showSavedExample() {
+  // Real results saved from the live pipeline (fictional patients). Shown instantly with no API call:
+  // useful for anyone browsing, and the backup if Wi-Fi or credits fail during a demo. They are clearly
+  // labelled as examples everywhere, including the printout, and are pre-loaded so they work offline.
+  type Saved = { plan: PlanResult; translations_pa: Record<string, string | null> };
+  const savedCache = useRef<Record<string, Saved>>({});
+  const savedPa = useRef<Record<string, string | null> | null>(null);
+
+  async function loadSaved(name: "heart" | "messy"): Promise<Saved> {
+    const cached = savedCache.current[name];
+    if (cached) return cached;
+    const res = await fetch(`/demo/${name}.json`);
+    if (!res.ok) throw new Error();
+    const data = (await res.json()) as Saved;
+    savedCache.current[name] = data;
+    return data;
+  }
+
+  async function showSavedExample(name: "heart" | "messy" = "heart") {
     try {
-      const res = await fetch("/demo/heart.json");
-      if (!res.ok) throw new Error();
-      const data = (await res.json()) as { plan: PlanResult; translations_pa: Record<string, string | null> };
+      const data = await loadSaved(name);
       translateRequest.current++; // cancel any translation in flight
+      savedPa.current = data.translations_pa;
       setError(null);
       setLang("pa");
       setPlan(data.plan);
@@ -126,23 +139,43 @@ export default function Home() {
       setTranslating(false);
       setStatus("done");
       requestAnimationFrame(() => {
-            resultsRef.current?.scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" });
-            document.getElementById("week")?.focus({ preventScroll: true });
-          });
+        resultsRef.current?.scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" });
+        document.getElementById("week")?.focus({ preventScroll: true });
+      });
     } catch {
       setError("The saved example couldn't be loaded. Check the connection and try again.");
       setStatus("error");
     }
   }
 
-  // caresheet.vercel.app/?example opens the saved example straight away (handy link for judges).
+  // caresheet.vercel.app/?example (or ?example=messy) opens a saved example straight away, and both
+  // examples are fetched in the background so they still open if the connection drops later.
   useEffect(() => {
-    if (!new URLSearchParams(window.location.search).has("example")) return;
-    const t = setTimeout(() => void showSavedExample(), 0); // after first render, not during it
+    const params = new URLSearchParams(window.location.search);
+    void loadSaved("heart").catch(() => {});
+    void loadSaved("messy").catch(() => {});
+    if (!params.has("example")) return;
+    const name = params.get("example") === "messy" ? "messy" : "heart";
+    const t = setTimeout(() => void showSavedExample(name), 0); // after first render, not during it
     return () => clearTimeout(t);
-    // Runs once on load; showSavedExample only uses setters and a ref, so it is safe to omit.
+    // Runs once on load; these functions only use setters and refs, so it is safe to omit them.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Changing language while an example is open: the saved Punjabi is restored locally; other languages
+  // need a live translation, which the example doesn't have, so show English and say so.
+  function onLanguage(code: string) {
+    setLang(code);
+    if (!plan) return;
+    if (isExample) {
+      translateRequest.current++;
+      setTranslateError(false);
+      setTranslating(false);
+      setTranslations(code === "pa" ? savedPa.current : null);
+      return;
+    }
+    void translate(plan, code);
+  }
 
   async function translate(p: PlanResult, code: string) {
     const id = ++translateRequest.current;
@@ -319,7 +352,7 @@ export default function Home() {
 
           <label className="mt-5 block max-w-sm">
             <span className="font-bold">Your parent&apos;s language</span>
-            <select value={lang} onChange={(e) => { setLang(e.target.value); if (plan) void translate(plan, e.target.value); }}
+            <select value={lang} onChange={(e) => onLanguage(e.target.value)}
               className="mt-1 block w-full rounded-lg border-2 border-field bg-paper p-2.5 text-base">
               {LANGS.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
             </select>
@@ -340,8 +373,11 @@ export default function Home() {
             <button type="button" onClick={() => void loadPhotoSample()} className="text-action underline">
               Try: Photos of the papers
             </button>
-            <button type="button" onClick={() => void showSavedExample()} className="text-action underline">
+            <button type="button" onClick={() => void showSavedExample("heart")} className="text-action underline">
               See a finished example
+            </button>
+            <button type="button" onClick={() => void showSavedExample("messy")} className="text-action underline">
+              See the messy-sheet example
             </button>
           </div>
         </section>
@@ -364,7 +400,7 @@ export default function Home() {
         {error ? (
           <div role="alert" className="mt-6 rounded-xl border-l-4 border-stop bg-stop-wash p-4">
             <p>{error}</p>
-            <button type="button" onClick={() => void showSavedExample()} className="mt-2 text-action underline">
+            <button type="button" onClick={() => void showSavedExample("heart")} className="mt-2 text-action underline">
               Show the saved example instead
             </button>
           </div>
@@ -378,6 +414,7 @@ export default function Home() {
             {isExample ? (
               <p role="status" className="rounded-xl border-2 border-ask bg-ask-wash p-4 font-bold">
                 Example only: this is a fictional patient, not your papers. Add your own papers above to make your plan.
+                {lang !== "pa" ? " This saved example has Punjabi only; other languages need a live connection and your own papers." : ""}
               </p>
             ) : null}
             <section aria-labelledby="week">

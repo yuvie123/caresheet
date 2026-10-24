@@ -21,7 +21,13 @@ function Pill({
       aria-label={`${med.name} ${med.strength ?? ""}${dose ? `, ${dose}` : ""}, ${where}${doubtful ? ", confirm with the pharmacist first" : ""}. Show the line it came from.`}
       className="block min-h-11 w-full break-words rounded-md bg-paper px-2 py-1.5 text-left text-[0.9rem] leading-snug shadow-[0_1px_0_var(--color-rule)] hover:ring-2 hover:ring-action"
     >
-      <span className="font-bold">{med.name}</span> {med.strength}
+      <span className="font-bold">
+        {/* break only after a hyphen ("Amoxicillin-" / "clavulanate"), never leaving a lone "-" on a line */}
+        {med.name.split(/(?<=-)/).map((part, i) => (
+          <span key={i} className="inline-block">{part}</span>
+        ))}
+      </span>{" "}
+      {med.strength}
       {dose ? <span className="block text-muted">{dose}</span> : null}
       {med.with_food === "with_food" ? (
         <Plate className="mt-0.5 h-4 w-4 text-muted" title={UI_STRINGS.with_food} />
