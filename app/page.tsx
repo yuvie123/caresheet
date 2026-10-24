@@ -2,23 +2,18 @@
 // The whole app is this one page:
 // 1. Add the hospital papers (paste, photos, or PDF) and pick the family's language.
 // 2. Watch the steps run (read, double-check, check ingredients).
-// 3. See the pill organizer, the med list, pharmacist questions, and print the fridge sheet.
+// 3. See the results on one short screen with four tabs, and print the fridge sheet.
 import { useEffect, useRef, useState } from "react";
-import AskPharmacist from "@/components/AskPharmacist";
-import Feedback from "@/components/Feedback";
 import FileThumbs from "@/components/FileThumbs";
 import Hero from "@/components/Hero";
-import { Bell, Camera, Chat, Files, Printer } from "@/components/Icons";
+import { ArrowRight, Camera, Capsule, ChevronDown, Files, Plus } from "@/components/Icons";
 import FridgeSheet from "@/components/FridgeSheet";
 import HowItWorks from "@/components/HowItWorks";
-import MedList from "@/components/MedList";
-import Notes from "@/components/Notes";
-import Organizer from "@/components/Organizer";
-import ReadAloud from "@/components/ReadAloud";
+import ResultsView from "@/components/ResultsView";
+import TextSize from "@/components/TextSize";
 import type { PlanResult, Progress } from "@/lib/claude";
 import { compressImage } from "@/lib/compress";
-import { downloadIcs } from "@/lib/ics";
-import { shareText, translatableStrings } from "@/lib/render";
+import { translatableStrings } from "@/lib/render";
 import { SAMPLES } from "@/lib/samples";
 
 const LANGS = [
@@ -36,6 +31,7 @@ const STEPS: { key: Progress; label: string }[] = [
 ];
 
 type Status = "idle" | "working" | "done" | "error";
+type View = "input" | "results";
 
 export default function Home() {
   const [texts, setTexts] = useState<string[]>([""]);
@@ -54,13 +50,38 @@ export default function Home() {
   const abortRef = useRef<AbortController | null>(null);
   const cancelledRef = useRef(false);
   const translateRequest = useRef(0); // ignore replies for a language that's no longer selected
-  const resultsRef = useRef<HTMLDivElement>(null);
+  const [view, setView] = useState<View>("input");
   const reduceMotion = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const langName = LANGS.find((l) => l.code === lang)?.name.split(" ").slice(1).join(" ") || null;
   // Language label only when a translation is actually showing.
   const shownLangName = translations && lang ? langName : null;
   const englishOnlyLines = translations ? Object.values(translations).filter((v) => v === null).length : 0;
+
+  // Switch to the results screen, go to the top, and move focus to its heading once it has rendered.
+  function showResults() {
+    setView("results");
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: reduceMotion() ? "auto" : "smooth" });
+      document.getElementById("results-title")?.focus({ preventScroll: true });
+    }, 0);
+  }
+
+  function startOver() {
+    translateRequest.current++;
+    setPlan(null);
+    setIsExample(false);
+    setTranslations(null);
+    setTranslateError(false);
+    setTranslating(false);
+    setTexts([""]);
+    setFiles([]);
+    setFileError(null);
+    setError(null);
+    setStatus("idle");
+    setView("input");
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }
 
   async function onFiles(list: FileList | null) {
     if (!list) return;
@@ -142,10 +163,7 @@ export default function Home() {
       setTranslateError(false);
       setTranslating(false);
       setStatus("done");
-      requestAnimationFrame(() => {
-        resultsRef.current?.scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" });
-        document.getElementById("week")?.focus({ preventScroll: true });
-      });
+      showResults();
     } catch {
       setError("The saved example couldn't be loaded. Check the connection and try again.");
       setStatus("error");
@@ -257,10 +275,7 @@ export default function Home() {
           gotResult = true;
           setPlan(msg.result);
           setStatus("done");
-          requestAnimationFrame(() => {
-            resultsRef.current?.scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" });
-            document.getElementById("week")?.focus({ preventScroll: true });
-          });
+          showResults();
           void translate(msg.result, lang);
         }
       };
@@ -301,243 +316,199 @@ export default function Home() {
 
   const canRun = status !== "working" && (texts.some((t) => t.trim()) || files.length > 0);
 
+  const sampleLink = "inline-flex min-h-11 items-center py-1 font-semibold text-action underline underline-offset-4 hover:text-action-dark";
+  const uploadTile =
+    "flex cursor-pointer items-center gap-3 rounded-lg border-[1.5px] border-dashed border-field bg-white px-4 py-3 hover:border-action hover:bg-action-tint has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-action";
+
+  const footer = (
+    <footer className="mt-16 bg-night text-white print:hidden">
+      <div className="mx-auto grid max-w-5xl items-start gap-3 px-4 py-8 sm:grid-cols-[auto_1fr] sm:gap-8 sm:px-6">
+        <p className="text-lg font-bold">CareSheet</p>
+        <p className="max-w-prose text-pretty text-[0.95rem] text-white/85">
+          Not medical advice. CareSheet only reorganizes what the hospital wrote. Nothing is saved. Papers go to the Claude API to be read, and medicine names to NIH RxNav and MedlinePlus.
+        </p>
+      </div>
+    </footer>
+  );
+
   return (
-    <main className="pb-24">
+    <main>
       <p role="status" aria-live="polite" className="sr-only">
         {status === "working" ? "Reading the papers, please wait." : status === "done" && plan ? `Your plan is ready: ${plan.verified_medications.length} medicines and ${plan.ask_pharmacist.length} questions for the pharmacist.` : ""}
       </p>
-      <div className="no-print"><Hero /></div>
-      <div className="mx-auto max-w-5xl px-4 sm:px-6">
-      <div className="no-print">
-        {/* Step 1: input */}
-        <section aria-labelledby="add" className="card relative -mt-16 p-5 sm:-mt-20 sm:p-8">
-          <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-night font-bold text-white">1</span>
-            <h2 id="add" className="text-2xl font-bold tracking-tight">Add the papers</h2>
-          </div>
 
-          {texts.map((t, i) => (
-            <label key={i} className="mt-4 block">
-              <span className="font-bold">{i === 0 ? "Discharge instructions" : "Pill bottle label or other note"}</span>
-              <textarea
-                value={t}
-                onChange={(e) => setTexts((prev) => prev.map((x, j) => (j === i ? e.target.value : x)))}
-                rows={i === 0 ? 7 : 3}
-                placeholder={i === 0 ? "Paste the discharge medication list here, or add photos below." : ""}
-                className="mt-1.5 block w-full rounded-xl border-2 border-field bg-mist p-3.5 text-base focus:border-action focus:bg-white"
-              />
-            </label>
-          ))}
-          {texts.length < 3 ? (
-            <button type="button" onClick={() => setTexts((p) => [...p, ""])} className="mt-2 font-bold text-action underline">
-              + Add another note (for example a pill bottle label)
-            </button>
-          ) : null}
-
-          <div className="mt-6">
-            <span className="font-bold">Photos or PDF</span>
-            <p className="text-muted">Discharge pages, pill bottles, or the PDF from the patient portal. Up to 4.</p>
-            <div className="mt-2 grid gap-3 sm:grid-cols-2">
-              <label className="flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-action bg-mist px-4 py-3 hover:bg-white has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-action">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-action text-white"><Files className="h-6 w-6" /></span>
-                <span><span className="block font-bold text-action">Choose photos or PDF</span><span className="block text-sm text-muted">From this device</span></span>
-                <input type="file" accept="image/*,application/pdf" multiple className="sr-only"
-                  onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
-              </label>
-              <label className="flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-action bg-mist px-4 py-3 hover:bg-white has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-action">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-action text-white"><Camera className="h-6 w-6" /></span>
-                <span><span className="block font-bold text-action">Take a photo</span><span className="block text-sm text-muted">Use the camera</span></span>
-                <input type="file" accept="image/*" capture="environment" className="sr-only"
-                  onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
-              </label>
-            </div>
-            <FileThumbs files={files} onRemove={(i) => setFiles((p) => p.filter((_, j) => j !== i))} />
-            {fileError ? <p role="alert" className="mt-2 text-stop">{fileError}</p> : null}
-          </div>
-
-          <div className="mt-8 flex items-center gap-3">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-night font-bold text-white">2</span>
-            <label htmlFor="lang" className="text-2xl font-bold tracking-tight">Your parent&apos;s language</label>
-          </div>
-          <select id="lang" value={lang} onChange={(e) => onLanguage(e.target.value)}
-            className="mt-3 block w-full max-w-sm rounded-xl border-2 border-field bg-white p-3 text-base">
-            {LANGS.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
-          </select>
-
-          <div className="mt-8 flex items-center gap-3">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-night font-bold text-white">3</span>
-            <h2 className="text-2xl font-bold tracking-tight">Build the plan</h2>
-          </div>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <button type="button" disabled={!canRun} onClick={() => void run()} className="btn btn-primary px-7 py-3 text-lg">
-              {status === "working" ? "Building the plan…" : "Build the plan"}
-            </button>
-            {status === "working" ? (
-              <button type="button" onClick={() => { cancelledRef.current = true; abortRef.current?.abort(); }} className="btn btn-secondary">
-                Cancel
-              </button>
-            ) : null}
-            {!canRun && status !== "working" ? <span className="text-muted">Add the papers first (paste text or add a photo).</span> : null}
-          </div>
-
-          <div className="mt-7 rounded-xl bg-mist p-4">
-            <p className="font-bold">No papers handy? Try one of ours.</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {(Object.keys(SAMPLES) as (keyof typeof SAMPLES)[]).map((k) => (
-                <button key={k} type="button" onClick={() => loadSample(k)} className="chip">
-                  {SAMPLES[k].label}
-                </button>
-              ))}
-              <button type="button" onClick={() => void loadPhotoSample()} className="chip">Photos of the papers</button>
-            </div>
-            <p className="mt-3 text-sm text-muted">Or skip the wait and see a finished plan:</p>
-            <div className="mt-1.5 flex flex-wrap gap-2">
-              <button type="button" onClick={() => void showSavedExample("heart")} className="chip">See a finished example</button>
-              <button type="button" onClick={() => void showSavedExample("messy")} className="chip">See the messy-sheet example</button>
+      {view === "results" && plan ? (
+        <div className="no-print">
+          <div className="border-b border-rule bg-white">
+            <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-lid-noon text-ink sm:h-10 sm:w-10"><Capsule className="h-6 w-6" /></span>
+                <span className="min-w-0 truncate text-lg font-bold tracking-tight max-[430px]:[html.text-xlarge_&]:hidden sm:text-xl">CareSheet</span>
+              </div>
+              <TextSize />
             </div>
           </div>
-        </section>
-
-        {/* Step 2: progress */}
-        {status === "working" || (status === "error" && seen.length) ? (
-          <ol className="card mt-6 space-y-1 p-5" aria-live="polite">
-            {STEPS.filter((s) => s.key !== "retrying" || seen.includes("retrying")).map((s) => {
-              const done = seen.includes(s.key) && stage !== s.key;
-              const now = stage === s.key && status === "working";
-              return (
-                <li key={s.key} className={done ? "text-ink" : now ? "font-bold" : "text-muted"}>
-                  {done ? "✓ " : now ? "… " : "  "}{s.label}
-                </li>
-              );
-            })}
-          </ol>
-        ) : null}
-
-        {error ? (
-          <div role="alert" className="mt-6 rounded-xl border-l-4 border-stop bg-stop-wash p-4">
-            <p>{error}</p>
-            <button type="button" onClick={() => void showSavedExample("heart")} className="mt-2 text-action underline">
-              Show the saved example instead
-            </button>
+          <div className="mx-auto max-w-5xl px-4 sm:px-6">
+            <ResultsView
+              plan={plan}
+              lang={lang}
+              languages={LANGS}
+              langName={langName}
+              shownLangName={shownLangName}
+              translations={translations}
+              translating={translating}
+              translateError={translateError}
+              englishOnlyLines={englishOnlyLines}
+              isExample={isExample}
+              onLanguage={onLanguage}
+              onRetryTranslate={() => void translate(plan, lang)}
+              onEdit={() => setView("input")}
+              onNew={startOver}
+            />
           </div>
-        ) : null}
-      </div>
-
-      {/* Step 3: results */}
-      {plan ? (
-        <div ref={resultsRef} className="mt-10 space-y-10 print:mt-0 print:space-y-0">
-          <div className="no-print space-y-10">
-            {isExample ? (
-              <p role="status" className="rounded-xl border-2 border-ask bg-ask-wash p-4 font-bold">
-                Example only: this is a fictional patient, not your papers. Add your own papers above to make your plan.
-                {lang !== "pa" ? " This saved example has Punjabi only; other languages need a live connection and your own papers." : ""}
-              </p>
-            ) : null}
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { n: plan.verified_medications.filter((m) => m.status !== "stop").length, label: "medicines checked", tone: "bg-white text-ink" },
-                { n: plan.verified_medications.filter((m) => m.status === "stop").length, label: "to stop", tone: "bg-stop-wash text-stop" },
-                { n: plan.ask_pharmacist.length, label: "to ask the pharmacist", tone: "bg-ask-wash text-ask" },
-              ].map((t) => (
-                <div key={t.label} className={`card px-3 py-3 sm:px-5 ${t.tone}`}>
-                  <p className="text-3xl font-bold leading-none sm:text-4xl">{t.n}</p>
-                  <p className="mt-1 text-sm font-bold sm:text-base">{t.label}</p>
+          {footer}
+        </div>
+      ) : (
+        <div className="no-print">
+          <Hero onExample={() => void showSavedExample("heart")} />
+          <div className="mx-auto max-w-5xl px-4 sm:px-6">
+            <section id="start" aria-labelledby="add" className="card relative -mt-16 scroll-mt-4 p-5 shadow-[0_30px_60px_-30px_rgb(15_42_55/.45)] ring-1 ring-black/5 sm:-mt-20 sm:p-6">
+              {plan ? (
+                <div role="status" className="mb-5 flex flex-col gap-3 border-b border-rule pb-5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-lg font-bold">Your plan is ready</p>
+                  <button type="button" onClick={showResults} className="btn btn-primary min-h-12 w-full px-6 sm:w-auto">
+                    Back to your plan
+                    <ArrowRight className="h-5 w-5" />
+                  </button>
                 </div>
-              ))}
-            </div>
-            <nav aria-label="Jump to a section" className="sticky top-0 z-20 -mx-4 overflow-x-auto bg-wash/90 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
-              <ul className="flex gap-2">
-                {[["week", "This week"], ["ask", "Ask your pharmacist"], ["meds", "All medicines"], ["fridge", "Fridge sheet"]].map(([id, label]) => (
-                  <li key={id}><a href={`#${id}`} className="chip whitespace-nowrap">{label}</a></li>
-                ))}
-              </ul>
-            </nav>
-            <section aria-labelledby="week" className="scroll-mt-16">
-              <h2 id="week" tabIndex={-1} className="section-title outline-none">This week</h2>
-              <p className="mb-4 mt-1 text-muted">Tap any medicine to see the exact line it came from.</p>
-              <Organizer plan={plan} />
-            </section>
+              ) : null}
+              <h2 id="add" className="sr-only">Add the papers</h2>
 
-            <section aria-labelledby="ask" className="scroll-mt-16">
-              <h2 id="ask" className="section-title">Ask your pharmacist</h2>
-              <p className="mb-4 mt-1 text-muted">CareSheet didn&apos;t put these on the schedule. Show this list at the pharmacy counter.</p>
-              <AskPharmacist plan={plan} />
-              {!isExample ? <Feedback flags={plan.ask_pharmacist.length} /> : null}
-            </section>
-
-            <section aria-labelledby="meds" className="scroll-mt-16">
-              <h2 id="meds" className="section-title">All medicines</h2>
-              <div className="mt-4"><MedList plan={plan} lang={lang === "es" ? "es" : "en"} /></div>
-            </section>
-
-            <section><Notes plan={plan} /></section>
-
-            <section aria-labelledby="fridge" className="scroll-mt-16">
-              <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                  <h2 id="fridge" className="section-title">Fridge sheet</h2>
-                  <p className="mt-1 text-muted">
-                    {translating
-                      ? `Translating into ${langName}…`
-                      : shownLangName
-                        ? `English and ${shownLangName}. Numbers are never translated, only words.`
-                        : "English."}
-                  </p>
-                  {translateError ? (
-                    <p role="alert" className="mt-1 text-stop">
-                      The translation didn&apos;t work, so this sheet is English only.{" "}
-                      <button type="button" className="text-action underline" onClick={() => void translate(plan, lang)}>
-                        Try again
-                      </button>
-                    </p>
-                  ) : null}
-                  {englishOnlyLines > 0 ? (
-                    <p className="mt-1 text-ask">
-                      {englishOnlyLines} line{englishOnlyLines > 1 ? "s were" : " was"} kept in English because the translation
-                      changed a number. Please have someone read {englishOnlyLines > 1 ? "them" : "it"} aloud.
-                    </p>
+                  {texts.map((t, i) => (
+                    <label key={i} className={`block ${i > 0 ? "mt-4" : ""}`}>
+                      <span className="text-lg font-bold">{i === 0 ? "Paste the discharge instructions" : "Pill bottle label or other note"}</span>
+                      {i === 0 ? <span className="mt-0.5 block text-[0.95rem] text-muted">Copy the medicine list from the hospital and paste it here.</span> : null}
+                      <textarea
+                        value={t}
+                        onChange={(e) => setTexts((prev) => prev.map((x, j) => (j === i ? e.target.value : x)))}
+                        rows={i === 0 ? 8 : 3}
+                        placeholder={i === 0 ? "Paste the discharge medication list here, or add photos." : ""}
+                        className="field mt-2 block w-full resize-y p-3 text-base leading-relaxed"
+                      />
+                    </label>
+                  ))}
+                  {texts.length < 3 ? (
+                    <button type="button" onClick={() => setTexts((p) => [...p, ""])} className="mt-1 inline-flex min-h-11 items-start gap-2 py-2 text-left font-semibold text-action underline underline-offset-4 hover:text-action-dark">
+                      <Plus className="mt-0.5 h-5 w-5 shrink-0" />
+                      Add another note, such as a pill bottle label
+                    </button>
                   ) : null}
                 </div>
+
+                <div className="flex flex-col">
+                  <span className="text-lg font-bold">Or add photos or a PDF</span>
+                  <span className="mt-0.5 block text-[0.95rem] text-muted">Discharge pages, pill bottles, or the patient portal PDF. Up to 4.</span>
+                  <div className="mt-2 flex flex-1 flex-col gap-3">
+                    <label className={`${uploadTile} min-h-40 flex-1 flex-col justify-center text-center`}>
+                      <Files className="h-7 w-7 shrink-0 text-action" />
+                      <span><span className="block text-lg font-bold text-action">Choose photos or PDF</span></span>
+                      <input type="file" accept="image/*,application/pdf" multiple className="sr-only"
+                        onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
+                    </label>
+                    <label className={`${uploadTile} min-h-[4.5rem] hidden [@media(pointer:coarse)]:flex`}>
+                      <Camera className="h-7 w-7 shrink-0 text-action" />
+                      <span><span className="block text-lg font-bold text-action">Take a photo</span></span>
+                      <input type="file" accept="image/*" capture="environment" className="sr-only"
+                        onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
+                    </label>
+                  </div>
+                  <FileThumbs files={files} onRemove={(i) => setFiles((p) => p.filter((_, j) => j !== i))} />
+                  {fileError ? <p role="alert" className="mt-2 text-stop">{fileError}</p> : null}
+                </div>
               </div>
-              <div className="mt-3 flex flex-wrap gap-3">
-                <button onClick={() => window.print()} className="btn btn-primary">
-                  <Printer className="h-5 w-5" /> Print for the fridge
-                </button>
-                <button type="button" onClick={() => downloadIcs(plan)} className="btn btn-secondary">
-                  <Bell className="h-5 w-5" /> Add reminders to my phone
-                </button>
-                <a className="btn btn-secondary" target="_blank" rel="noreferrer"
-                  href={`https://wa.me/?text=${encodeURIComponent(shareText(plan))}`}>
-                  <Chat className="h-5 w-5" /> Send to family on WhatsApp
-                </a>
-                <ReadAloud plan={plan} translations={translations} lang={lang} />
+
+              <div className="mt-6 flex flex-col gap-4 border-t border-rule pt-5 sm:flex-row sm:flex-wrap sm:items-end">
+                <div className="w-full sm:w-64">
+                  <label htmlFor="lang" className="block text-base font-bold">Language for the fridge sheet</label>
+                  <div className="relative mt-2">
+                    <select id="lang" value={lang} onChange={(e) => onLanguage(e.target.value)}
+                      className="field block min-h-12 w-full cursor-pointer appearance-none py-2 pl-3 pr-12 text-lg">
+                      {LANGS.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
+                    </select>
+                    <span className="pointer-events-none absolute inset-y-0 right-3 grid place-items-center text-action">
+                      <ChevronDown className="h-5 w-5" />
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <button type="button" disabled={!canRun} onClick={() => void run()} className="btn btn-primary min-h-12 w-full px-8 text-lg sm:w-auto">
+                    {status === "working" ? "Building the plan…" : "Build the plan"}
+                    <ArrowRight className="h-5 w-5" />
+                  </button>
+                  {status === "working" ? (
+                    <button type="button" onClick={() => { cancelledRef.current = true; abortRef.current?.abort(); }} className="btn btn-secondary min-h-12 w-full sm:w-auto">
+                      Cancel
+                    </button>
+                  ) : null}
+                  {!canRun && status !== "working" ? <p className="text-[0.95rem] text-muted">Add papers to continue.</p> : null}
+                </div>
               </div>
-              <p className="mt-2 text-sm text-muted">
-                Reminders go into your own phone calendar at 8:00, 12:30, 18:00 and 21:30 for the next week. You can change the times there.
-              </p>
-              <div className="mt-4 rounded-2xl bg-[#d5dfe5] p-2 shadow-inner sm:p-5">
-                <FridgeSheet plan={plan} translations={translations} languageName={shownLangName} langCode={lang} isExample={isExample} />
+
+              <div className="mt-5 border-t border-rule pt-4 text-[0.95rem]">
+                <p className="text-muted">No papers handy?</p>
+                <div className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-[auto_1fr] sm:items-center sm:gap-y-2">
+                  <span className="font-semibold">Try a sample:</span>
+                  <div className="flex flex-wrap items-center gap-x-5">
+                    {(Object.keys(SAMPLES) as (keyof typeof SAMPLES)[]).map((k) => (
+                      <button key={k} type="button" onClick={() => loadSample(k)} className={sampleLink}>{SAMPLES[k].label}</button>
+                    ))}
+                    <button type="button" onClick={() => void loadPhotoSample()} className={sampleLink}>Photos of the papers</button>
+                  </div>
+                  <span className="mt-2 font-semibold sm:mt-0">See a finished plan:</span>
+                  <div className="flex flex-wrap items-center gap-x-5">
+                    <button type="button" onClick={() => void showSavedExample("heart")} className={sampleLink}>Heart patient, finished plan</button>
+                    <button type="button" onClick={() => void showSavedExample("messy")} className={sampleLink}>Messy sheet, finished plan</button>
+                  </div>
+                </div>
               </div>
             </section>
 
-            <details className="card p-5">
-              <summary className="cursor-pointer font-bold">What CareSheet read (transcript)</summary>
-              <p className="mt-2 text-sm text-muted">
-                Every medicine on the schedule was matched against this text by code, not by AI. Photos are transcribed by Claude, so check names against the bottle.
-              </p>
-              {plan.transcript.map((d) => (
-                <pre key={d.doc_index} className="mt-3 whitespace-pre-wrap rounded-lg bg-wash p-3 font-sans text-sm">{d.text}</pre>
-              ))}
-            </details>
-          </div>
+            {status === "working" || (status === "error" && seen.length) ? (
+              <ol className="card mt-6 space-y-1 p-5" aria-live="polite">
+                {STEPS.filter((s) => s.key !== "retrying" || seen.includes("retrying")).map((s) => {
+                  const done = seen.includes(s.key) && stage !== s.key;
+                  const now = stage === s.key && status === "working";
+                  return (
+                    <li key={s.key} className={done ? "text-ink" : now ? "font-bold" : "text-muted"}>
+                      {done ? "✓ " : now ? "… " : "  "}{s.label}
+                    </li>
+                  );
+                })}
+              </ol>
+            ) : null}
 
-          <div className="print-only">
-            <FridgeSheet plan={plan} translations={translations} languageName={shownLangName} langCode={lang} isExample={isExample} />
+            {error ? (
+              <div role="alert" className="mt-6 rounded-xl border border-stop-line bg-stop-wash p-4">
+                <p>{error}</p>
+                <button type="button" onClick={() => void showSavedExample("heart")} className="mt-2 min-h-11 text-action underline">
+                  Show the saved example instead
+                </button>
+              </div>
+            ) : null}
+
+            <HowItWorks />
           </div>
+          {footer}
+        </div>
+      )}
+
+      {plan ? (
+        <div className="print-only">
+          <FridgeSheet plan={plan} translations={translations} languageName={shownLangName} langCode={lang} isExample={isExample} />
         </div>
       ) : null}
-      <div className="no-print"><HowItWorks /></div>
-      </div>
     </main>
   );
 }

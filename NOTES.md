@@ -94,6 +94,21 @@ Fonts ship inside the app, so a build never depends on Google being reachable.
 ### The three-page fridge sheet
 Page 1: the week and tick boxes. Page 2: medicine list and STOP list. Page 3: questions for the pharmacist, phone numbers and a sign-off line.
 
+## The results screen (tabs instead of one long page)
+
+The results used to be one very long page. They are now one short screen with four tabs, so nothing important needs scrolling:
+
+- **Daily routine** (`components/Routine.tsx`): a red "Stop taking" strip, a Day 1 to 7 picker, and the day laid out by time of day. Tap a medicine to open its details.
+- **All medicines** (`components/Medicines.tsx`): one list with filter buttons (Stop, New, Changed, Keep taking, Unclear).
+- **Ask the pharmacist** (`components/AskPharmacist.tsx`): numbered questions, each with the exact words from the papers behind a "What the papers say" toggle.
+- **Fridge sheet**: the printable sheet in the family's language.
+- `components/MedDetail.tsx` is the pop-up with the full story of one medicine (bottom sheet on a phone, centred panel on a laptop). It uses the browser's built-in `<dialog>`, which handles Esc and keyboard focus for us.
+- `components/ResultsView.tsx` owns the tabs and the header buttons (Print, Reminders, WhatsApp).
+- `components/TextSize.tsx` lets anyone make all text larger (A, A+, A++). It never changes the printout.
+- `daysLabel` and `slotWords` in `lib/render.ts` turn the schedule data into plain words like "Days 1 to 5" and "Morning and evening". They have tests.
+
+Two details worth knowing: digits use a separate font (Inter) so a zero looks like a zero rather than a slashed zero, and the print rules pin the line height and size so the fridge sheet stays exactly three pages.
+
 ## Commands
 
 ```

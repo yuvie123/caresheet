@@ -192,6 +192,31 @@ export function shareText(plan: PlanResult): string {
  * mismatched or unclear), or its status is unclear. These stay visible but are marked "confirm first" and
  * get no phone reminders, so a doubtful dose isn't nagged at the family.
  */
+/** Which days a medicine is taken, in plain words: "Every day", "Days 1 to 5", "Every other day", "Only when needed". */
+export function daysLabel(med: Medication): string {
+  if (med.as_needed) return "Only when needed";
+  if (cadenceUnclear(med)) {
+    const f = med.frequency_verbatim.trim();
+    return f ? f.charAt(0).toUpperCase() + f.slice(1) : "Ask the pharmacist";
+  }
+  const n = everyNDays(med);
+  if (n === 2) return "Every other day";
+  if (n > 2) return `Every ${n} days`;
+  const d = durationDays(med);
+  if (d === null) return "Every day";
+  if (d === 1) return "Day 1 only";
+  if (d < 7) return `Days 1 to ${d}`;
+  return `Every day for ${d} days`;
+}
+
+/** Times of day as words, e.g. "Morning and evening". Empty when the sheet gives none. */
+export function slotWords(med: Medication): string {
+  const names = SLOT_ORDER.filter((s) => med.slots.includes(s)).map((s) => UI_STRINGS[`slot_${s}`]);
+  if (names.length === 0) return "";
+  const lower = names.map((n, i) => (i === 0 ? n : n.toLowerCase()));
+  return lower.length === 1 ? lower[0] : `${lower.slice(0, -1).join(", ")} and ${lower[lower.length - 1]}`;
+}
+
 export function confirmFirst(plan: PlanResult, med: Medication): boolean {
   if (med.status === "unclear") return true;
   const q = normalizeForMatch(med.source_quote);

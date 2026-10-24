@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -37,10 +37,12 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: ["/og.png"] },
 };
 
+export const viewport: Viewport = { themeColor: "#0e2a35" };
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${atkinson.variable} ${gurmukhi.variable} ${devanagari.variable} h-full`}>
-      <body className="min-h-full">{children}</body>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }

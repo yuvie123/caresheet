@@ -43,21 +43,21 @@ function Bi({ id, en, t, className, inline }: { id: string; en: string; t: T | n
   return (
     <span className={className}>
       <span className="block">{en}</span>
-      {show ? <span lang={lang} className="block text-[0.95em] leading-normal">{tr}</span> : null}
+      {show ? <span lang={lang} className="block text-[max(1rem,0.95em)] leading-normal print:text-[0.95em]">{tr}</span> : null}
     </span>
   );
 }
 
 function TickRow({ med, slot }: { med: Medication; slot: Slot }) {
   return (
-    <div className="mt-1 flex gap-1" aria-label={`Tick boxes for ${med.name}, ${slot}`}>
+    <div className="mt-1 flex gap-1.5 print:gap-1" aria-label={`Tick boxes for ${med.name}, ${slot}`}>
       {DAYS.map((d) => {
         const on = activeOnDay(med, d);
         return (
           <span
             key={d}
-            className={`flex h-5 w-5 items-center justify-center rounded-[3px] border-[1.5px] text-[9px] leading-none ${
-              on ? "border-ink text-muted" : "border-rule bg-wash text-rule"
+            className={`flex h-8 w-8 items-center justify-center rounded-[4px] border-[1.5px] text-[0.95rem] leading-none print:h-5 print:w-5 print:rounded-[3px] print:text-[9px] ${
+              on ? "border-ink text-muted" : "border-rule bg-wash text-caption line-through print:text-rule print:no-underline"
             }`}
           >
             {d + 1}
@@ -78,11 +78,11 @@ function MedLine({ med, index, slot, t, doubtful }: { med: Medication; index: nu
           <Plate className="ml-1 inline h-4 w-4 align-[-2px]" title={UI_STRINGS.with_food} />
         ) : null}
         {med.with_food !== "not_stated" ? (
-          <div className="text-[0.85em] font-bold">
+          <div className="text-[0.95em] font-bold print:text-[0.85em]">
             <Bi inline id={med.with_food === "with_food" ? "with_food" : "empty_stomach"} en={med.with_food === "with_food" ? UI_STRINGS.with_food : UI_STRINGS.empty_stomach} t={t} />
           </div>
         ) : null}
-        <div className="text-[0.85em] text-muted">
+        <div className="text-[0.95em] text-muted print:text-[0.85em]">
           <Bi id={`freq_${index}`} en={med.frequency_verbatim} t={t} />
           {med.duration_verbatim || days ? (
             <Bi
@@ -94,7 +94,7 @@ function MedLine({ med, index, slot, t, doubtful }: { med: Medication; index: nu
           ) : null}
         </div>
         {doubtful ? (
-          <div className="mt-1 inline-block rounded border-2 border-ask px-1.5 text-xs font-bold text-ask">
+          <div className="mt-1 inline-block rounded border-2 border-ask px-1.5 text-[0.95rem] font-bold text-ask print:text-xs">
             <Bi id="confirm_first" en={UI_STRINGS.confirm_first} t={t} />
           </div>
         ) : null}
@@ -103,7 +103,7 @@ function MedLine({ med, index, slot, t, doubtful }: { med: Medication; index: nu
       {med.dose_amount !== null ? (
         <div className="shrink-0 text-right">
           <span className="text-3xl font-bold leading-none">{doseNumber(med)}</span>
-          <Bi id={`unit_${index}`} en={med.dose_unit ?? ""} t={t} className="text-xs" />
+          <Bi id={`unit_${index}`} en={med.dose_unit ?? ""} t={t} className="text-[0.95rem] print:text-xs" />
         </div>
       ) : null}
     </li>
@@ -135,10 +135,10 @@ export default function FridgeSheet({
     <LangCtx.Provider value={translations ? langCode : ""}>
     <div className="space-y-6 print:block print:space-y-0">
       {/* ---------- Page 1: the fridge ---------- */}
-      <article className="mx-auto max-w-[8.5in] bg-paper p-4 text-ink sm:p-6 print:p-0" aria-label="Fridge sheet, page 1">
+      <article className="mx-auto max-w-[8.5in] bg-paper print:bg-white p-4 text-ink sm:p-6 shadow-[0_1px_2px_rgb(15_42_55/.12),0_14px_32px_-10px_rgb(15_42_55/.28)] ring-1 ring-black/5 sm:rounded-sm print:rounded-none print:shadow-none print:ring-0 print:p-0" aria-label="Fridge sheet, page 1">
         <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1 border-b-4 border-ink pb-2">
           <h2 className="text-3xl font-bold leading-tight">{label("sheet_title")}</h2>
-          <p className="text-right text-xs text-muted">
+          <p className="basis-full text-left text-sm text-muted print:basis-auto print:text-right print:text-xs">
             {languageName ? `English + ${languageName} (machine translation; English is the source)` : "English"}
             <br />
             {label("not_advice")}
@@ -179,12 +179,12 @@ export default function FridgeSheet({
             );
           })}
         </div>
-        <p className="mt-2 text-xs text-muted">{label("tick_hint")}</p>
+        <p className="mt-2 text-sm text-muted print:text-xs">{label("tick_hint")}</p>
       </article>
 
       {/* ---------- Page 2: also important + pharmacist ---------- */}
       <article
-        className="mx-auto max-w-[8.5in] bg-paper p-4 text-ink sm:p-6 print:break-before-page print:p-0"
+        className="mx-auto max-w-[8.5in] bg-paper print:bg-white p-4 text-ink sm:p-6 shadow-[0_1px_2px_rgb(15_42_55/.12),0_14px_32px_-10px_rgb(15_42_55/.28)] ring-1 ring-black/5 sm:rounded-sm print:rounded-none print:shadow-none print:ring-0 print:break-before-page print:p-0"
         aria-label="Fridge sheet, page 2"
       >
         <h2 className="border-b-4 border-ink pb-2 text-2xl font-bold">{label("page2_title")}</h2>
@@ -196,7 +196,7 @@ export default function FridgeSheet({
               {unscheduled.map((m) => (
                 <li key={idx(m)} className="border-b border-rule py-1.5 last:border-0">
                   <span className="font-bold">{m.name}</span> {m.strength}
-                  <div className="text-[0.85em] text-muted">
+                  <div className="text-[0.95em] text-muted print:text-[0.85em]">
                     <Bi id={`freq_${idx(m)}`} en={m.frequency_verbatim} t={translations} />
                   </div>
                 </li>
@@ -212,7 +212,7 @@ export default function FridgeSheet({
               {asNeeded.map((m) => (
                 <li key={idx(m)} className="border-b border-rule py-1.5 last:border-0">
                   <span className="font-bold">{m.name}</span> {m.strength}
-                  <div className="text-[0.85em] text-muted">
+                  <div className="text-[0.95em] text-muted print:text-[0.85em]">
                     <Bi id={`freq_${idx(m)}`} en={m.frequency_verbatim} t={translations} />
                   </div>
                 </li>
@@ -269,7 +269,7 @@ export default function FridgeSheet({
       {/* ---------- Page 3: for the pharmacist ---------- */}
       {plan.ask_pharmacist.length ? (
         <article
-          className="mx-auto max-w-[8.5in] bg-paper p-4 text-ink sm:p-6 print:break-before-page print:p-0"
+          className="mx-auto max-w-[8.5in] bg-paper print:bg-white p-4 text-ink sm:p-6 shadow-[0_1px_2px_rgb(15_42_55/.12),0_14px_32px_-10px_rgb(15_42_55/.28)] ring-1 ring-black/5 sm:rounded-sm print:rounded-none print:shadow-none print:ring-0 print:break-before-page print:p-0"
           aria-label="Fridge sheet, page 3: for the pharmacist"
         >
           <h2 className="border-b-4 border-ink pb-2 text-2xl font-bold">{label("pharmacist_title")}</h2>
@@ -279,7 +279,7 @@ export default function FridgeSheet({
               {plan.ask_pharmacist.map((q, i) => (
                 <li key={i}>
                   {q.issue}
-                  {translations?.[`pharm_${i}`] ? <span lang={langCode || undefined} className="block text-[0.95em] leading-normal">{translations[`pharm_${i}`]}</span> : null}
+                  {translations?.[`pharm_${i}`] ? <span lang={langCode || undefined} className="block text-[max(1rem,0.95em)] leading-normal print:text-[0.95em]">{translations[`pharm_${i}`]}</span> : null}
                   {q.quotes.length ? (
                     <span className="block text-sm text-muted">{UI_STRINGS.from_papers}: &ldquo;{q.quotes.join("” / “")}&rdquo;</span>
                   ) : null}

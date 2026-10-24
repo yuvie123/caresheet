@@ -13,11 +13,10 @@ export default function FileThumbs({ files, onRemove }: { files: File[]; onRemov
         <li key={`${f.name}-${i}`} className="relative">
           {urls[i] ? (
             // eslint-disable-next-line @next/next/no-img-element -- local blob preview, not an optimizable asset
-            <img src={urls[i]!} alt={`Preview of ${f.name}`} className="h-28 w-24 rounded-lg border-2 border-field object-cover" />
+            <img src={urls[i]!} alt={`Preview of ${f.name}`} className="h-32 w-28 rounded-md border-2 border-field object-cover shadow-1" />
           ) : (
-            <div className="flex h-28 w-24 items-center justify-center rounded-lg border-2 border-field bg-wash p-2 text-center text-xs">
-              PDF
-              <br />
+            <div className="flex h-32 w-28 flex-col items-center justify-center break-all rounded-md border-2 border-field bg-wash p-2 text-center text-sm shadow-1">
+              <span className="font-bold">PDF</span>
               {f.name}
             </div>
           )}
@@ -25,7 +24,7 @@ export default function FileThumbs({ files, onRemove }: { files: File[]; onRemov
             type="button"
             aria-label={`Remove ${f.name}`}
             onClick={() => onRemove(i)}
-            className="absolute -right-3 -top-3 h-10 w-10 rounded-full bg-ink text-lg text-white"
+            className="absolute -right-3 -top-3 grid h-11 w-11 place-items-center rounded-full bg-ink text-xl text-white shadow-2 ring-2 ring-white hover:bg-night-soft"
           >
             ×
           </button>

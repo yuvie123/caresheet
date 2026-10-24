@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PlanResult } from "./claude";
-import { activeOnDay, cadenceUnclear, durationDays, everyNDays, scheduledMeds, TRANSLATE_MAX_KEYS, TRANSLATE_MAX_VALUE, translatableStrings, unscheduledMeds } from "./render";
+import { activeOnDay, cadenceUnclear, daysLabel, durationDays, everyNDays, scheduledMeds, slotWords, TRANSLATE_MAX_KEYS, TRANSLATE_MAX_VALUE, translatableStrings, unscheduledMeds } from "./render";
 import type { Medication } from "./schema";
 
 const med = (over: Partial<Medication>): Medication => ({
@@ -85,5 +85,24 @@ describe("translatableStrings stays within the endpoint limits", () => {
     expect(keys).toContain("pharm_0");
     expect(keys).toContain("freq_0");
     expect(keys).not.toContain("freq_1");
+  });
+});
+
+describe("daysLabel and slotWords", () => {
+  const base = med({ slots: ["morning", "evening"], status: "continue" });
+
+  it("says every day when nothing limits it", () => expect(daysLabel(base)).toBe("Every day"));
+  it("says the days of a short course", () => expect(daysLabel(med({ duration_verbatim: "for 5 days" }))).toBe("Days 1 to 5"));
+  it("says a one-day course plainly", () => expect(daysLabel(med({ duration_verbatim: "for 1 day" }))).toBe("Day 1 only"));
+  it("says a long course in words", () => expect(daysLabel(med({ duration_verbatim: "for 14 days" }))).toBe("Every day for 14 days"));
+  it("says every other day", () => expect(daysLabel(med({ frequency_verbatim: "every other day" }))).toBe("Every other day"));
+  it("says every 3 days", () => expect(daysLabel(med({ frequency_verbatim: "every 3 days" }))).toBe("Every 3 days"));
+  it("says only when needed", () => expect(daysLabel(med({ as_needed: true }))).toBe("Only when needed"));
+  it("repeats an unclear cadence in the sheet's own words", () =>
+    expect(daysLabel(med({ frequency_verbatim: "twice weekly" }))).toBe("Twice weekly"));
+  it("names the times of day", () => {
+    expect(slotWords(base)).toBe("Morning and evening");
+    expect(slotWords(med({ slots: ["morning", "noon", "bedtime"] }))).toBe("Morning, midday and bedtime");
+    expect(slotWords(med({ slots: [] }))).toBe("");
   });
 });

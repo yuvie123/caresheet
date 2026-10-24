@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  devIndicators: false,
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

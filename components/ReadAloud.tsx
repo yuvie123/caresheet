@@ -3,6 +3,7 @@
 "use client";
 import { useState, useSyncExternalStore } from "react";
 import type { PlanResult } from "@/lib/claude";
+import { Speaker } from "./Icons";
 import { confirmFirst, doseNumber, scheduledMeds, stoppedMeds, UI_STRINGS, unscheduledMeds, usedSlots, type UiKey } from "@/lib/render";
 
 const VOICE_LANG: Record<string, string> = { pa: "pa", hi: "hi", es: "es", "": "en" };
@@ -98,17 +99,19 @@ export default function ReadAloud({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="contents">
       <button
         type="button"
         onClick={speaking ? stop : speak}
-        className="rounded-xl border-2 border-action px-4 py-2 font-bold text-action"
+        disabled={!voice}
+        className="btn btn-secondary min-h-14 w-full justify-start disabled:opacity-60 sm:w-auto sm:justify-center"
       >
+        <Speaker className="h-5 w-5" />
         {speaking ? "Stop reading" : "Read it aloud"}
       </button>
-      {lang && !native ? (
-        <span className="text-sm text-muted">This device has no voice for that language, so it reads in English.</span>
-      ) : null}
+      <p aria-live="polite" className="basis-full text-[0.95rem] text-muted empty:hidden">
+        {lang && !native ? "This device has no voice for that language, so it reads in English." : null}
+      </p>
     </div>
   );
 }

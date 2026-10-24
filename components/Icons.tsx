@@ -134,6 +134,44 @@ export function Capsule({ className }: { className?: string }) {
   );
 }
 
+
+export function Speaker(p: P) {
+  return (<Svg {...p}><path d="M4 9.5v5h4l5 4v-13l-5 4H4ZM16.5 9a4 4 0 0 1 0 6M18.8 6.5a7.5 7.5 0 0 1 0 11" /></Svg>);
+}
+export function Plus(p: P) {
+  return (<Svg {...p}><path d="M12 5v14M5 12h14" /></Svg>);
+}
+export function Pencil(p: P) {
+  return (<Svg {...p}><path d="m4 20 1-4L16.5 4.5a2 2 0 0 1 3 3L8 19l-4 1ZM14 7l3 3" /></Svg>);
+}
+export function Info(p: P) {
+  return (<Svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 11v5.5M12 7.5h.01" /></Svg>);
+}
+export function Quote(p: P) {
+  return (<Svg {...p}><path d="M5 17v-5a4 4 0 0 1 4-4M13 17v-5a4 4 0 0 1 4-4M5 17h4v-4H5M13 17h4v-4h-4" /></Svg>);
+}
+export function ExternalLink(p: P) {
+  return (<Svg {...p}><path d="M14 4h6v6M20 4 10.5 13.5M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></Svg>);
+}
+export function Alert(p: P) {
+  return (<Svg {...p}><path d="M12 4 2.8 19.5h18.4L12 4ZM12 10v4.5M12 17.2h.01" /></Svg>);
+}
+export function Calendar(p: P) {
+  return (<Svg {...p}><rect x="4" y="5.5" width="16" height="14.5" rx="2" /><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" /></Svg>);
+}
+export function ChevronDown(p: P) {
+  return (<Svg {...p}><path d="m6 9 6 6 6-6" /></Svg>);
+}
+export function ChevronRight(p: P) {
+  return (<Svg {...p}><path d="m9 6 6 6-6 6" /></Svg>);
+}
+export function ArrowRight(p: P) {
+  return (<Svg {...p}><path d="M5 12h14M13 6l6 6-6 6" /></Svg>);
+}
+export function Clock(p: P) {
+  return (<Svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></Svg>);
+}
+
 export const SLOT_ICON: Record<Slot, (p: P) => React.ReactElement> = {
   morning: Sunrise,
   noon: Sun,

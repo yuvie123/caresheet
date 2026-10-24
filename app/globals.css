@@ -1,45 +1,132 @@
 @import "tailwindcss";
 
-/* Colors come from the medicine cabinet: white pharmacy labels, ink, and the coloured lids of a
-   weekly pill organizer (one lid colour per time of day). STOP is the only red on the page. */
-@theme {
-  --color-paper: #ffffff;
-  --color-wash: #e8eef1; /* pale label-backing grey-blue */
-  --color-night: #0f2a37; /* hero band: deep pharmacy teal */
-  --color-night-soft: #1b4357;
-  --color-mist: #f6f9fa;
-  --color-ink: #17212b;
-  --color-muted: #52606d;
-  --color-rule: #cfd8de;
-  --color-field: #6b7a88; /* borders of inputs and thumbnails: 4:1 against white (WCAG 1.4.11) */
-  --color-action: #1a5873; /* pharmacy blue for buttons and links */
-  --color-stop: #b42318;
-  --color-stop-wash: #fdecea;
-  --color-ask: #8a5a00; /* amber: needs a human */
-  --color-ask-wash: #fff6e0;
-
-  --color-lid-morning: #f2c14e;
-  --color-lid-noon: #7cc6b5;
-  --color-lid-evening: #e8875f;
-  --color-lid-bedtime: #3d4f8f;
-
-  --font-sans: var(--font-atkinson), var(--font-gurmukhi), var(--font-devanagari), system-ui, sans-serif;
+/* Plain-zero digits. Atkinson draws a slashed zero, which in a dose ("5Ø0 mg") reads like a typo, so the
+   digits 0-9 alone come from Inter (bundled in app/fonts). Letters and Gurmukhi/Devanagari are untouched. */
+@font-face {
+  font-family: "Digits";
+  src: url("./fonts/Inter-var.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range: U+0030-0039;
+  /* Inter's cap height (~0.73em) is a touch taller than Atkinson's (~0.71em) and its strokes look lighter, so
+     scale the digits down to sit level with the letters. The overrides restore Inter's natural line metrics
+     (0.969 / 0.241 em) after the scale, so line boxes do not change. */
+  size-adjust: 92%;
+  ascent-override: 105%;
+  descent-override: 26%;
+  line-gap-override: 0%;
+}
+/* Same file, slanted, so digits in italic text lean with the letters instead of standing upright. */
+@font-face {
+  font-family: "Digits";
+  src: url("./fonts/Inter-var.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: oblique 10deg;
+  font-display: swap;
+  unicode-range: U+0030-0039;
+  size-adjust: 92%;
+  ascent-override: 105%;
+  descent-override: 26%;
+  line-gap-override: 0%;
 }
 
+/* Used as xl-text:class for fixes that only apply at the A++ text size. */
+@custom-variant xl-text (&:where(html.text-xlarge *));
+
+/* Colours come from the medicine cabinet: pharmacy-label paper, deep teal ink, and the coloured lids of a
+   weekly pill organizer (one lid per time of day). STOP is the only solid red on the page; amber means
+   "a human should check this". Control borders use --color-field (3.2:1 on white, WCAG 1.4.11). */
+@theme {
+  --color-paper: #fcfdfd;
+  --color-wash: #eef2f1; /* page canvas */
+  --color-mist: #f4f8f8; /* quiet panels inside cards */
+  --color-tray: #e3ecea; /* the pill-organizer tray */
+  --color-desk: #c9d5dc; /* the desk the fridge sheet lies on */
+  --color-ink: #14232b;
+  --color-muted: #44525f; /* 8:1 on white */
+  --color-caption: #5f6e78; /* large or secondary text only */
+  --color-rule: #d4dcdb; /* decorative dividers only */
+  --color-field: #7f9097; /* every interactive control border */
+  --color-night: #0e2a35; /* hero band and footer */
+  --color-night-soft: #17424f;
+  --color-action: #17607c; /* pharmacy blue: buttons and links */
+  --color-action-dark: #124d65;
+  --color-action-tint: #e4f1f5;
+  --color-stop: #b42318;
+  --color-stop-wash: #fdf0ee;
+  --color-stop-line: #f1c9c4;
+  --color-ask: #7a4d00; /* amber text: 6.4:1 on its wash */
+  --color-ask-solid: #b87400; /* amber icons, rules and badges */
+  --color-ask-wash: #fff7e3;
+  --color-ask-line: #efd9a1;
+  --color-ok: #1f7a63;
+  --color-ok-wash: #e8f5f1;
+
+  --color-lid-morning: #e9b230;
+  --color-lid-noon: #4fae9a;
+  --color-lid-evening: #e07a4f;
+  --color-lid-bedtime: #3d4f8f;
+  --color-lid-morning-tint: #fdf3d6;
+  --color-lid-noon-tint: #e1f3ee;
+  --color-lid-evening-tint: #fde9df;
+  --color-lid-bedtime-tint: #e4e8f6;
+  --color-lid-morning-ink: #6b4a00;
+  --color-lid-noon-ink: #1d5e51;
+  --color-lid-evening-ink: #8a3a17;
+  --color-lid-bedtime-ink: #2a3770;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.25rem;
+
+  --shadow-1: 0 1px 2px rgb(15 42 55 / 0.07);
+  --shadow-2: 0 1px 2px rgb(15 42 55 / 0.05), 0 12px 32px -16px rgb(15 42 55 / 0.22);
+  --shadow-3: 0 24px 56px -20px rgb(6 24 32 / 0.5);
+
+  --text-sm: 0.95rem;
+  --text-xs: 0.8125rem; /* decorative tags only */
+
+  --font-sans: "Digits", var(--font-atkinson), var(--font-gurmukhi), var(--font-devanagari), system-ui, sans-serif;
+}
+
+html.text-large { font-size: 21px; }
+html.text-xlarge { font-size: 24px; }
 html {
   font-size: 18px; /* everything scales from an 18px base for older eyes */
 }
-
-body {
-  background: linear-gradient(var(--color-wash), var(--color-wash));
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  line-height: 1.5;
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
-:focus-visible {
-  outline: 3px solid var(--color-action);
-  outline-offset: 3px;
+body {
+  background: linear-gradient(#e9f0ef 0, #f1f5f4 480px, #f1f5f4 100%) no-repeat, #f1f5f4;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-variant-numeric: lining-nums;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* In a layer so utility classes such as outline-none can still switch the ring off on containers. */
+@layer base {
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  p, li {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-action);
+    outline-offset: 3px;
+  }
+  .on-dark :focus-visible {
+    outline-color: #fff;
+  }
+  [tabindex="-1"]:focus {
+    outline: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -49,29 +136,89 @@ body {
   }
 }
 
-/* Shared building blocks, so every button and card looks like it belongs to the same product. */
+/* Medicine detail: a bottom sheet on phones, a centred panel on larger screens (native <dialog>). */
+@layer base {
+  dialog.sheet {
+    margin: auto auto 0; width: 100%; max-width: 100%; max-height: 88dvh; padding: 0; border: 0; background: #fff;
+    color: var(--color-ink); border-radius: 1.25rem 1.25rem 0 0; box-shadow: 0 -12px 48px rgb(6 24 32 / 0.35); overflow: auto;
+  }
+  dialog.sheet::backdrop { background: rgb(6 24 32 / 0.55); }
+  dialog.sheet[open] { animation: sheet-in 180ms ease-out; }
+  @media (min-width: 640px) {
+    dialog.sheet { margin: auto; max-width: 34rem; border-radius: 1.25rem; box-shadow: var(--shadow-3); }
+  }
+}
+@keyframes sheet-in { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Shared building blocks, so every button, field and card looks like it belongs to the same product. */
 @layer components {
   .btn {
     display: inline-flex; min-height: 2.75rem; align-items: center; justify-content: center; gap: 0.5rem;
-    border-radius: 0.75rem; padding: 0.5rem 1.1rem; font-weight: 700; line-height: 1.2; cursor: pointer;
-    transition: background-color 120ms, box-shadow 120ms, transform 120ms;
+    border-radius: var(--radius-md); padding: 0.5rem 1.15rem; font-weight: 700; line-height: 1.2; cursor: pointer;
+    transition: background-color 120ms, box-shadow 120ms, border-color 120ms, transform 120ms;
   }
-  .btn-primary { background: var(--color-action); color: #fff; box-shadow: 0 2px 0 #0f3a4d; }
-  .btn-primary:hover:not(:disabled) { background: #14485f; }
-  .btn-primary:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 #0f3a4d; }
-  .btn-primary:disabled { background: #9db5c0; box-shadow: none; cursor: not-allowed; }
-  .btn-secondary { border: 2px solid var(--color-action); color: var(--color-action); background: #fff; }
-  .btn-secondary:hover { background: var(--color-mist); }
+  .btn-primary {
+    background: linear-gradient(#1f6683, var(--color-action)); color: #fff;
+    box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.18), 0 6px 14px -6px rgb(23 96 124 / 0.55);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(#1a5b76, var(--color-action-dark));
+    box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.2), 0 8px 18px -6px rgb(23 96 124 / 0.65);
+  }
+  .btn-primary:active:not(:disabled) { transform: translateY(1px); }
+  .btn-primary:disabled {
+    background: #dfe7ea; color: #55636f; box-shadow: inset 0 0 0 1px #c8d3d8; cursor: not-allowed;
+  }
+  .btn-secondary { border: 2px solid var(--color-action); color: var(--color-action); background: #fff; box-shadow: var(--shadow-1); }
+  .btn-secondary:hover { background: var(--color-action-tint); }
+  .btn-light { background: #fff; color: var(--color-night); box-shadow: 0 6px 16px -8px rgb(0 0 0 / 0.5); }
+  .btn-light:hover { background: var(--color-wash); }
+
   .chip {
-    display: inline-flex; min-height: 2.5rem; align-items: center; gap: 0.4rem; border-radius: 999px;
-    border: 1.5px solid var(--color-rule); background: #fff; padding: 0.25rem 0.9rem; font-size: 0.9rem;
-    font-weight: 700; color: var(--color-action); cursor: pointer;
+    display: inline-flex; min-height: 2.75rem; align-items: center; gap: 0.45rem; border-radius: 999px;
+    border: 2px solid var(--color-field); background: #fff; padding: 0.3rem 1rem; font-size: 1rem;
+    font-weight: 700; color: var(--color-action); cursor: pointer; box-shadow: var(--shadow-1);
+    transition: border-color 120ms, background-color 120ms, transform 120ms;
   }
-  .chip:hover { border-color: var(--color-action); background: var(--color-mist); }
-  .card { background: #fff; border-radius: 1.25rem; box-shadow: 0 1px 2px rgb(15 42 55 / 0.06), 0 8px 24px -12px rgb(15 42 55 / 0.18); }
-  /* Section headings carry a short bar in the colour of the lids, like the label on a pill box. */
-  .section-title { display: flex; align-items: center; gap: 0.7rem; font-size: 1.85rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; }
-  .section-title::before { content: ""; width: 0.45rem; height: 1.7rem; border-radius: 999px; background: linear-gradient(var(--color-lid-morning) 25%, var(--color-lid-noon) 25% 50%, var(--color-lid-evening) 50% 75%, var(--color-lid-bedtime) 75%); flex: none; }
+  .chip:hover { border-color: var(--color-action); background: var(--color-action-tint); }
+  .chip:active { transform: translateY(1px); }
+  .chip-solid { background: var(--color-action); border-color: var(--color-action); color: #fff; }
+  .chip-solid:hover { background: var(--color-action-dark); border-color: var(--color-action-dark); }
+  .chip[aria-current="true"] { background: var(--color-night); border-color: var(--color-night); color: #fff; }
+
+  /* Inputs, textarea and select share one look. */
+  .field {
+    background: #fff; border: 2px solid var(--color-field); border-radius: var(--radius-md); color: var(--color-ink);
+    transition: border-color 120ms, box-shadow 120ms;
+  }
+  .field:hover { border-color: #5b6d75; }
+  .field:focus { outline: none; border-color: var(--color-action); box-shadow: 0 0 0 4px rgb(23 96 124 / 0.2); }
+  .field::placeholder { color: #667684; }
+
+  .card {
+    background: #fff; border-radius: var(--radius-lg); border: 1px solid rgb(15 42 55 / 0.06); box-shadow: var(--shadow-2);
+  }
+
+  /* A coloured edge that follows the card's rounded corners (a plain border-left makes tapered slivers).
+     Set the colour with style={{ "--accent": "var(--color-stop)" }}. */
+  .accent-l, .accent-t { position: relative; overflow: hidden; }
+  .accent-l::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 0.375rem; background: var(--accent, var(--color-action)); }
+  .accent-t::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 0.375rem; background: var(--accent, var(--color-action)); }
+  .accent-l { padding-left: 1.5rem; }
+  .accent-t { padding-top: 1.75rem; }
+
+  .section-title { font-size: 1.75rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }
+  .eyebrow { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-action); }
+  /* The four lid colours as a thin signature bar. */
+  .lid-bar {
+    display: block; height: 4px; width: 5rem; border-radius: 2px;
+    background: linear-gradient(90deg, var(--color-lid-morning) 0 25%, var(--color-lid-noon) 25% 50%, var(--color-lid-evening) 50% 75%, var(--color-lid-bedtime) 75%);
+  }
+  .num { font-variant-numeric: lining-nums tabular-nums; font-weight: 600; }
+  /* Solid tags that still read in greyscale print. */
+  .tag-stop { background: var(--color-stop); color: #fff; font-weight: 800; padding: 0 0.45rem; border-radius: 6px; }
+  .tag-ask { background: var(--color-ask); color: #fff; font-weight: 800; padding: 0 0.45rem; border-radius: 6px; }
+  [id] { scroll-margin-top: 5rem; }
 }
 
 /* Printing: only the fridge sheet prints, on white, at full contrast. */
@@ -83,11 +230,12 @@ body {
     size: letter;
     margin: 12mm;
   }
-  html {
-    font-size: 14px; /* everything is sized in rem, so the whole sheet scales down to fit one page */
+  html, html.text-large, html.text-xlarge {
+    font-size: 13.5px !important; /* the reader's text-size choice never changes the printout; everything is sized in rem, so the whole sheet scales down to fit one page */
   }
   body {
     background: #fff;
+    line-height: 1.5; /* the sheet was laid out to fit three pages at this line height */
   }
   main {
     padding: 0 !important;
