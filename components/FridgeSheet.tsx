@@ -54,7 +54,7 @@ function TickRow({ med, slot }: { med: Medication; slot: Slot }) {
 function MedLine({ med, index, slot, t }: { med: Medication; index: number; slot: Slot; t: T | null }) {
   const days = durationDays(med);
   return (
-    <li className="flex gap-3 border-b border-rule py-1.5 last:border-0" style={{ breakInside: "avoid" }}>
+    <li className="flex min-w-0 gap-3 border-b border-rule py-1.5 last:border-0" style={{ breakInside: "avoid" }}>
       <div className="min-w-0 flex-1">
         <span className="font-bold">{med.name}</span> {med.strength}
         {med.with_food === "with_food" ? (
@@ -104,8 +104,8 @@ export default function FridgeSheet({
   return (
     <div className="space-y-6 print:block print:space-y-0">
       {/* ---------- Page 1: the fridge ---------- */}
-      <article className="mx-auto max-w-[8.5in] bg-paper p-6 text-ink print:p-0" aria-label="Fridge sheet, page 1">
-        <header className="flex items-end justify-between gap-4 border-b-4 border-ink pb-2">
+      <article className="mx-auto max-w-[8.5in] bg-paper p-4 text-ink sm:p-6 print:p-0" aria-label="Fridge sheet, page 1">
+        <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1 border-b-4 border-ink pb-2">
           <h2 className="text-3xl font-bold leading-tight">{label("sheet_title")}</h2>
           <p className="text-right text-xs text-muted">
             {languageName ? `English + ${languageName}` : "English"}
@@ -130,7 +130,7 @@ export default function FridgeSheet({
           </section>
         ) : null}
 
-        <div className={`mt-3 grid gap-3 ${slots.length > 1 ? "grid-cols-2" : ""}`}>
+        <div className={`mt-3 grid gap-3 ${slots.length > 1 ? "sm:grid-cols-2 print:grid-cols-2" : ""}`}>
           {slots.map((slot) => {
             const meds = scheduledMeds(plan).filter((m) => m.slots.includes(slot));
             const Icon = SLOT_ICON[slot];
@@ -153,7 +153,7 @@ export default function FridgeSheet({
 
       {/* ---------- Page 2: also important + pharmacist ---------- */}
       <article
-        className="mx-auto max-w-[8.5in] bg-paper p-6 text-ink print:break-before-page print:p-0"
+        className="mx-auto max-w-[8.5in] bg-paper p-4 text-ink sm:p-6 print:break-before-page print:p-0"
         aria-label="Fridge sheet, page 2"
       >
         <h2 className="border-b-4 border-ink pb-2 text-2xl font-bold">{label("page2_title")}</h2>
@@ -174,7 +174,7 @@ export default function FridgeSheet({
           </section>
         ) : null}
 
-        <div className="mt-3 grid grid-cols-2 gap-4 text-[0.95em]">
+        <div className="mt-3 grid gap-4 text-[0.95em] sm:grid-cols-2 print:grid-cols-2">
           <section>
             <h3 className="font-bold text-stop">{label("warning_title")}</h3>
             <ul className="mt-1 list-disc pl-5">
