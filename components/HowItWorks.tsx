@@ -11,7 +11,7 @@ const STEPS = [
   {
     who: "Code",
     title: "Checks every line",
-    body: "Plain code, not AI, finds each quoted sentence in the papers and checks the dose numbers are really there. Anything that doesn't match never reaches the schedule.",
+    body: "Plain code, not AI, finds each quoted sentence in the papers and checks the dose numbers are really there. Anything that doesn't match is kept off the schedule and becomes a pharmacist question.",
   },
   {
     who: "NIH RxNorm",

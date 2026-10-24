@@ -139,7 +139,7 @@ export default function FridgeSheet({
         <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1 border-b-4 border-ink pb-2">
           <h2 className="text-3xl font-bold leading-tight">{label("sheet_title")}</h2>
           <p className="text-right text-xs text-muted">
-            {languageName ? `English + ${languageName}` : "English"}
+            {languageName ? `English + ${languageName} (machine translation; English is the source)` : "English"}
             <br />
             {label("not_advice")}
           </p>

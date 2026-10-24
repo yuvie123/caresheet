@@ -305,7 +305,7 @@ export default function Home() {
           </p>
           <p className="mt-3 rounded-lg bg-paper px-4 py-2 text-base text-muted">
             Not medical advice. CareSheet only reorganizes what the hospital wrote. Anything it isn&apos;t sure about goes on a list for your pharmacist.
-            Nothing you add is stored.
+            CareSheet saves nothing. Papers are sent to the Claude API to be read, and medicine names to NIH RxNav and MedlinePlus.
           </p>
         </header>
 

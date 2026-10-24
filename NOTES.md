@@ -77,4 +77,4 @@ pnpm eval    # real-API evals (costs a few cents)
 
 - **"Isn't checking Claude's quote against Claude's transcript circular?"** For pasted text, no: the transcript is the user's own text. For photos, partly: the transcript comes from Claude too. That's why the transcript is shown on screen, names are checked against RxNorm, and the pharmacist list exists. The checks guard against invented items, not against misreading a blurry photo.
 - **"What if the hospital sheet itself is wrong?"** CareSheet doesn't judge prescriptions. It reorganizes and flags inconsistencies for a pharmacist.
-- **"Why not just use ChatGPT?"** A chat answer can quietly invent a dose. CareSheet structurally can't put an unverified dose on the fridge.
+- **"Why not just use ChatGPT?"** A chat answer can quietly invent a dose. Every dose on the sheet traces to a quoted line in your papers, and code checks that line and its numbers. For photos the transcript is Claude's own reading, shown on screen so the family can check it.
