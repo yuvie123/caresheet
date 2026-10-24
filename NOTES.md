@@ -65,6 +65,35 @@ Receive the upload, check sizes, rate-limit each visitor (so a public link can't
 ### `evals/`: proof it works
 Fictional discharge cases with the correct answers. `pnpm eval` runs them all against the real API and writes `evals/results.md`, which the README quotes. The headline number is "invented medications on the schedule", which must be 0.
 
+## Newer pieces (added after the first version)
+
+### `lib/errors.ts`: friendly error messages
+Turns scary API errors into plain sentences. If the Anthropic credit runs out or the key is wrong, the family sees "Live reading is paused right now" and a button for the saved example, never a stack trace.
+
+### `lib/ratelimit.ts`: protecting the credit
+A small in-memory counter per visitor. Plan builds are limited (default 25 per 10 minutes) and translations too, so a public link cannot drain the API budget.
+
+### `lib/render.ts` scheduling helpers
+Decide which medicines go on which days (for example "every other day", or a 5-day course). A medicine whose schedule is unclear is kept off the weekly grid and shown in an "unscheduled" box with a **Confirm first** badge instead of being guessed.
+
+### `lib/ics.ts`: phone reminders
+Makes a calendar file with one reminder per dose. Confirm-first medicines get no reminder. Long lines are folded by whole characters so Punjabi or Hindi text is never cut in half.
+
+### Saved examples (`public/demo/*.json`)
+Two real results saved from earlier runs, with Punjabi translations. `/?example` and `/?example=messy` show them instantly with no API call, so the demo works even with no credit or no Wi-Fi.
+
+### Cancel button and timeouts
+While a plan builds, a Cancel button stops the request cleanly. Each RxNorm lookup also has a deadline (8 seconds); if the government database is slow, the small built-in list is used so the plan never hangs.
+
+### Regression test (`lib/regression.test.ts`)
+Replays every saved real result through the safety checker. If a future change makes the checker stricter or looser than before, this test fails. It is the guard against breaking safety by accident.
+
+### Bundled fonts (`app/fonts`)
+Fonts ship inside the app, so a build never depends on Google being reachable.
+
+### The three-page fridge sheet
+Page 1: the week and tick boxes. Page 2: medicine list and STOP list. Page 3: questions for the pharmacist, phone numbers and a sign-off line.
+
 ## Commands
 
 ```
