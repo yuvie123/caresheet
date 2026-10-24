@@ -58,6 +58,20 @@ export default function Home() {
     setFiles([]);
   }
 
+  // A real result saved from the live site (fictional patient). Shown instantly, no API call:
+  // useful for anyone browsing, and the backup if Wi-Fi or credits fail during a demo.
+  async function showSavedExample() {
+    setError(null);
+    const res = await fetch("/demo/heart.json");
+    const data = (await res.json()) as { plan: PlanResult; translations_pa: Record<string, string | null> };
+    setTexts([SAMPLES.heart.text, SAMPLES.heart.bottle ?? ""]);
+    setLang("pa");
+    setPlan(data.plan);
+    setTranslations(data.translations_pa);
+    setStatus("done");
+    requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }));
+  }
+
   async function translate(p: PlanResult, code: string) {
     setTranslations(null);
     if (!code) return;
@@ -203,6 +217,9 @@ export default function Home() {
                 Try: {SAMPLES[k].label}
               </button>
             ))}
+            <button type="button" onClick={() => void showSavedExample()} className="text-action underline">
+              See a finished example
+            </button>
           </div>
         </section>
 
@@ -222,7 +239,12 @@ export default function Home() {
         ) : null}
 
         {error ? (
-          <p role="alert" className="mt-6 rounded-xl border-l-4 border-stop bg-stop-wash p-4">{error}</p>
+          <div role="alert" className="mt-6 rounded-xl border-l-4 border-stop bg-stop-wash p-4">
+            <p>{error}</p>
+            <button type="button" onClick={() => void showSavedExample()} className="mt-2 text-action underline">
+              Show the saved example instead
+            </button>
+          </div>
         ) : null}
       </div>
 

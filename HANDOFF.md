@@ -4,7 +4,7 @@ For Zia and the team. Yuvraj flies out Sunday 7 AM, so this is everything you ne
 
 ## Before judging (Sunday 10:00 AM)
 
-1. Open the live site on your laptop **and** your phone: <!-- LIVE_URL -->
+1. Open the live site on your laptop **and** your phone: https://caresheet.vercel.app
 2. Click **Try: Heart patient + Tylenol bottle**, then **Build the plan**. It should finish in under a minute.
 3. Keep the Devpost demo video open in another tab as a backup: <!-- VIDEO_URL -->
 4. Charge everything. Sit near the outlet if you can.
