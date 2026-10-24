@@ -339,15 +339,29 @@ export default function Home() {
 
       {view === "results" && plan ? (
         <div className="no-print">
-          <div className="border-b border-rule bg-white">
-            <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
+          <header
+            className="on-dark relative isolate overflow-hidden border-b border-white/10 text-white"
+            style={{
+              background:
+                "radial-gradient(40rem 24rem at 0% 100%, rgb(124 198 181 / 0.12), transparent 60%), radial-gradient(80% 120% at 85% 0%, #1f5a72 0%, #12333f 45%, #0c2630 100%)",
+            }}
+          >
+            <div
+              aria-hidden
+              className="h-1.5 w-full print:hidden"
+              style={{
+                background:
+                  "linear-gradient(90deg, var(--color-lid-morning) 0 25%, var(--color-lid-noon) 25% 50%, var(--color-lid-evening) 50% 75%, var(--color-lid-bedtime) 75%)",
+              }}
+            />
+            <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 sm:px-6 sm:py-5">
               <div className="flex min-w-0 items-center gap-2.5">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-lid-noon text-ink sm:h-10 sm:w-10"><Capsule className="h-6 w-6" /></span>
-                <span className="min-w-0 truncate text-lg font-bold tracking-tight max-[430px]:[html.text-xlarge_&]:hidden sm:text-xl">CareSheet</span>
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-lid-noon text-ink sm:h-11 sm:w-11"><Capsule className="h-6 w-6" /></span>
+                <span className="min-w-0 truncate text-lg font-bold tracking-tight max-[430px]:[html.text-xlarge_&]:hidden sm:text-[1.35rem]">CareSheet</span>
               </div>
               <TextSize />
             </div>
-          </div>
+          </header>
           <div className="mx-auto max-w-5xl px-4 sm:px-6">
             <ResultsView
               plan={plan}

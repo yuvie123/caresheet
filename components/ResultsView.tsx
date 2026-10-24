@@ -73,7 +73,7 @@ export default function ResultsView(props: {
     tabRefs.current[TABS[n].id]?.focus();
   }
 
-  const action = "btn btn-secondary min-h-12 w-full min-w-0 flex-col gap-0.5 !px-2 !py-1.5 text-center leading-tight !shadow-none [overflow-wrap:anywhere] sm:flex-row sm:gap-2 sm:!px-4";
+  const action = "btn btn-secondary min-h-12 w-full min-w-0 flex-col gap-0.5 !px-2 !py-1.5 text-center leading-tight !shadow-none [overflow-wrap:anywhere] sm:flex-row sm:gap-2 max-sm:text-[0.95rem] max-sm:!px-1 sm:!px-4";
 
   return (
     <div className="no-print">
