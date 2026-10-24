@@ -19,7 +19,7 @@ function Pill({
       type="button"
       onClick={() => onQuote(med)}
       aria-label={`${med.name} ${med.strength ?? ""}${dose ? `, ${dose}` : ""}, ${where}${doubtful ? ", confirm with the pharmacist first" : ""}. Show the line it came from.`}
-      className="block min-h-11 w-full break-words rounded-md bg-paper px-2 py-1.5 text-left text-[0.9rem] leading-snug shadow-[0_1px_0_var(--color-rule)] hover:ring-2 hover:ring-action"
+      className="block min-h-11 w-full break-words rounded-md bg-mist px-2 py-1.5 text-left text-[0.9rem] leading-snug ring-1 ring-rule hover:bg-white hover:ring-2 hover:ring-action"
     >
       <span className="font-bold">
         {/* break only after a hyphen ("Amoxicillin-" / "clavulanate"), never leaving a lone "-" on a line */}
@@ -27,7 +27,7 @@ function Pill({
           <span key={i} className="inline-block">{part}</span>
         ))}
       </span>{" "}
-      {med.strength}
+      <span className="whitespace-nowrap">{med.strength}</span>
       {dose ? <span className="block text-muted">{dose}</span> : null}
       {med.with_food === "with_food" ? (
         <Plate className="mt-0.5 h-4 w-4 text-muted" title={UI_STRINGS.with_food} />
@@ -67,7 +67,7 @@ export default function Organizer({ plan }: { plan: PlanResult }) {
         <div className="mb-3 flex gap-1 overflow-x-auto" role="group" aria-label="Choose a day">
           {DAY.map((label, i) => (
             <button key={label} type="button" aria-pressed={day === i} onClick={() => setDay(i)}
-              className={`min-h-11 shrink-0 rounded-full px-4 py-1 text-sm ${day === i ? "bg-ink text-white" : "bg-paper text-ink"}`}>
+              className={`min-h-11 shrink-0 rounded-full px-4 py-1 text-sm font-bold ${day === i ? "bg-night text-white" : "bg-white text-ink ring-1 ring-rule"}`}>
               {label}
             </button>
           ))}
@@ -77,7 +77,7 @@ export default function Organizer({ plan }: { plan: PlanResult }) {
             const Icon = SLOT_ICON[slot];
             const items = cell(slot, day);
             return (
-              <div key={slot} className="overflow-hidden rounded-xl bg-paper">
+              <div key={slot} className="card overflow-hidden">
                 <div className={`flex items-center gap-2 px-3 py-2 font-bold ${SLOT_LID[slot]}`}>
                   <Icon className="h-5 w-5" /> {UI_STRINGS[`slot_${slot}`]}
                 </div>
@@ -94,7 +94,7 @@ export default function Organizer({ plan }: { plan: PlanResult }) {
 
       {/* Laptop: the whole week like a pill organizer */}
       <div className="hidden md:block">
-        <div className="grid grid-cols-[7.5rem_repeat(7,minmax(0,1fr))] gap-1.5">
+        <div className="grid grid-cols-[7.5rem_repeat(7,minmax(0,1fr))] gap-1.5 rounded-2xl bg-[#d5dfe5] p-3 shadow-inner">
           <div />
           {DAY.map((d) => (
             <div key={d} className="pb-1 text-center text-sm font-bold text-muted">{d}</div>
@@ -109,7 +109,7 @@ export default function Organizer({ plan }: { plan: PlanResult }) {
                 {DAY.map((d, i) => {
                   const items = cell(slot, i);
                   return (
-                    <div key={d} className="min-h-20 space-y-1 rounded-lg border-t-4 bg-paper/70 p-1.5"
+                    <div key={d} className="min-h-20 space-y-1 rounded-lg border-t-4 bg-white p-1.5 shadow-sm"
                       style={{ borderTopColor: `var(--color-lid-${slot})` }}>
                       {items.map((m) => <Pill key={plan.verified_medications.indexOf(m)} med={m} onQuote={setQuoted} doubtful={confirmFirst(plan, m)} where={`${UI_STRINGS[`slot_${slot}`]}, ${DAY[i]}`} />)}
                     </div>
@@ -140,7 +140,7 @@ export default function Organizer({ plan }: { plan: PlanResult }) {
 
       {quoted ? (
         <div ref={panel} tabIndex={-1} role="region" aria-label={`Source for ${quoted.name}`}
-          className="mt-3 rounded-xl border-l-4 border-action bg-paper p-4">
+          className="card mt-3 border-l-4 border-action p-4">
           <p className="text-sm text-muted">From the hospital papers:</p>
           <blockquote className="mt-1 text-lg">&ldquo;{quoted.source_quote}&rdquo;</blockquote>
           <p className="mt-2 text-sm text-muted">Written as: {quoted.frequency_verbatim}</p>

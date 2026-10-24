@@ -2,6 +2,8 @@
 // The numbers come from evals/summary.json, written by `pnpm eval` against the real API.
 import summary from "@/evals/summary.json";
 
+const LID = ["bg-lid-morning text-ink", "bg-lid-noon text-ink", "bg-lid-evening text-ink", "bg-lid-bedtime text-white"];
+
 const STEPS = [
   {
     who: "Claude",
@@ -27,13 +29,14 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section aria-labelledby="how" className="mt-16 rounded-2xl bg-paper p-5 sm:p-6">
-      <h2 id="how" className="text-2xl font-bold">How CareSheet checks its work</h2>
+    <section aria-labelledby="how" className="card mt-16 p-5 sm:p-8">
+      <h2 id="how" className="section-title">How CareSheet checks its work</h2>
       <ol className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {STEPS.map((s, i) => (
-          <li key={s.title} className="rounded-xl border-2 border-rule p-4">
-            <p className="text-sm text-muted">
-              Step {i + 1} · {s.who}
+          <li key={s.title} className="rounded-xl bg-mist p-4 ring-1 ring-rule">
+            <p className="flex items-center gap-2 text-sm font-bold text-muted">
+              <span className={`grid h-7 w-7 place-items-center rounded-full ${LID[i]}`}>{i + 1}</span>
+              {s.who}
             </p>
             <p className="mt-1 text-lg font-bold">{s.title}</p>
             <p className="mt-1 text-[0.9rem] text-muted">{s.body}</p>

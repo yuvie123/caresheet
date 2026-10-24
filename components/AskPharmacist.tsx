@@ -21,15 +21,15 @@ export default function AskPharmacist({ plan }: { plan: PlanResult }) {
   return (
     <ul className="space-y-3">
       {items.map((q, i) => (
-        <li key={i} className="rounded-xl border-l-4 border-ask bg-ask-wash p-4">
-          <p className="flex items-center gap-2 text-sm font-bold text-ask">
+        <li key={i} className="card border-l-[6px] border-ask !bg-ask-wash p-4 sm:p-5">
+          <p className="flex items-center gap-2 text-base font-bold text-ask">
             <Question className="h-5 w-5" /> {KIND_LABEL[q.kind]}
           </p>
-          <p className="mt-1 text-lg">{q.issue}</p>
+          <p className="mt-1.5 text-lg leading-snug">{q.issue}</p>
           {q.quotes.length ? (
             <ul className="mt-2 space-y-1">
               {q.quotes.map((quote, j) => (
-                <li key={j} className="border-l-2 border-ask/40 pl-3 text-muted">&ldquo;{quote}&rdquo;</li>
+                <li key={j} className="rounded-r-md border-l-2 border-ask/50 bg-white/60 py-1 pl-3 pr-2 text-muted">&ldquo;{quote}&rdquo;</li>
               ))}
             </ul>
           ) : null}

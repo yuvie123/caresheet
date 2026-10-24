@@ -4,12 +4,15 @@
    weekly pill organizer (one lid colour per time of day). STOP is the only red on the page. */
 @theme {
   --color-paper: #ffffff;
-  --color-wash: #eef2f4; /* pale label-backing grey-blue */
+  --color-wash: #e8eef1; /* pale label-backing grey-blue */
+  --color-night: #0f2a37; /* hero band: deep pharmacy teal */
+  --color-night-soft: #1b4357;
+  --color-mist: #f6f9fa;
   --color-ink: #17212b;
   --color-muted: #52606d;
   --color-rule: #cfd8de;
   --color-field: #6b7a88; /* borders of inputs and thumbnails: 4:1 against white (WCAG 1.4.11) */
-  --color-action: #1f5f7a; /* pharmacy blue for buttons and links */
+  --color-action: #1a5873; /* pharmacy blue for buttons and links */
   --color-stop: #b42318;
   --color-stop-wash: #fdecea;
   --color-ask: #8a5a00; /* amber: needs a human */
@@ -28,7 +31,7 @@ html {
 }
 
 body {
-  background: var(--color-wash);
+  background: linear-gradient(var(--color-wash), var(--color-wash));
   color: var(--color-ink);
   font-family: var(--font-sans);
   line-height: 1.5;
@@ -44,6 +47,31 @@ body {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Shared building blocks, so every button and card looks like it belongs to the same product. */
+@layer components {
+  .btn {
+    display: inline-flex; min-height: 2.75rem; align-items: center; justify-content: center; gap: 0.5rem;
+    border-radius: 0.75rem; padding: 0.5rem 1.1rem; font-weight: 700; line-height: 1.2; cursor: pointer;
+    transition: background-color 120ms, box-shadow 120ms, transform 120ms;
+  }
+  .btn-primary { background: var(--color-action); color: #fff; box-shadow: 0 2px 0 #0f3a4d; }
+  .btn-primary:hover:not(:disabled) { background: #14485f; }
+  .btn-primary:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 #0f3a4d; }
+  .btn-primary:disabled { background: #9db5c0; box-shadow: none; cursor: not-allowed; }
+  .btn-secondary { border: 2px solid var(--color-action); color: var(--color-action); background: #fff; }
+  .btn-secondary:hover { background: var(--color-mist); }
+  .chip {
+    display: inline-flex; min-height: 2.5rem; align-items: center; gap: 0.4rem; border-radius: 999px;
+    border: 1.5px solid var(--color-rule); background: #fff; padding: 0.25rem 0.9rem; font-size: 0.9rem;
+    font-weight: 700; color: var(--color-action); cursor: pointer;
+  }
+  .chip:hover { border-color: var(--color-action); background: var(--color-mist); }
+  .card { background: #fff; border-radius: 1.25rem; box-shadow: 0 1px 2px rgb(15 42 55 / 0.06), 0 8px 24px -12px rgb(15 42 55 / 0.18); }
+  /* Section headings carry a short bar in the colour of the lids, like the label on a pill box. */
+  .section-title { display: flex; align-items: center; gap: 0.7rem; font-size: 1.85rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; }
+  .section-title::before { content: ""; width: 0.45rem; height: 1.7rem; border-radius: 999px; background: linear-gradient(var(--color-lid-morning) 25%, var(--color-lid-noon) 25% 50%, var(--color-lid-evening) 50% 75%, var(--color-lid-bedtime) 75%); flex: none; }
 }
 
 /* Printing: only the fridge sheet prints, on white, at full contrast. */

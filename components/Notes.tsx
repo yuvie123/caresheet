@@ -4,7 +4,7 @@ import type { PlanResult } from "@/lib/claude";
 export default function Notes({ plan }: { plan: PlanResult }) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      <section aria-labelledby="warn">
+      <section aria-labelledby="warn" className="card border-t-[6px] border-stop p-5">
         <h3 id="warn" className="text-xl font-bold text-stop">Call the doctor if</h3>
         {plan.warning_signs.length ? (
           <ul className="mt-2 list-disc space-y-1 pl-5">
@@ -12,7 +12,7 @@ export default function Notes({ plan }: { plan: PlanResult }) {
           </ul>
         ) : <p className="mt-2 text-muted">The papers didn&apos;t list warning signs.</p>}
       </section>
-      <section aria-labelledby="follow">
+      <section aria-labelledby="follow" className="card border-t-[6px] border-action p-5">
         <h3 id="follow" className="text-xl font-bold">Appointments and tests</h3>
         {plan.follow_ups.length ? (
           <ul className="mt-2 list-disc space-y-1 pl-5">

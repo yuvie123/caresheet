@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from "react";
 import AskPharmacist from "@/components/AskPharmacist";
 import Feedback from "@/components/Feedback";
 import FileThumbs from "@/components/FileThumbs";
+import Hero from "@/components/Hero";
+import { Bell, Camera, Chat, Files, Printer } from "@/components/Icons";
 import FridgeSheet from "@/components/FridgeSheet";
 import HowItWorks from "@/components/HowItWorks";
 import MedList from "@/components/MedList";
@@ -300,26 +302,19 @@ export default function Home() {
   const canRun = status !== "working" && (texts.some((t) => t.trim()) || files.length > 0);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">
+    <main className="pb-24">
       <p role="status" aria-live="polite" className="sr-only">
         {status === "working" ? "Reading the papers, please wait." : status === "done" && plan ? `Your plan is ready: ${plan.verified_medications.length} medicines and ${plan.ask_pharmacist.length} questions for the pharmacist.` : ""}
       </p>
+      <div className="no-print"><Hero /></div>
+      <div className="mx-auto max-w-5xl px-4 sm:px-6">
       <div className="no-print">
-        <header className="max-w-2xl">
-          <h1 className="text-4xl font-bold leading-tight sm:text-5xl">CareSheet</h1>
-          <p className="mt-3 text-xl">
-            Bringing a parent home from hospital? Add the discharge papers and the pill bottles from the kitchen.
-            CareSheet builds a weekly medicine plan, flags anything that doesn&apos;t add up, and prints it for the fridge in your family&apos;s language.
-          </p>
-          <p className="mt-3 rounded-lg bg-paper px-4 py-2 text-base text-muted">
-            Not medical advice. CareSheet only reorganizes what the hospital wrote. Anything it isn&apos;t sure about goes on a list for your pharmacist.
-            CareSheet saves nothing. Papers are sent to the Claude API to be read, and medicine names to NIH RxNav and MedlinePlus.
-          </p>
-        </header>
-
         {/* Step 1: input */}
-        <section aria-labelledby="add" className="mt-8 rounded-2xl bg-paper p-5 sm:p-6">
-          <h2 id="add" className="text-2xl font-bold">Add the papers</h2>
+        <section aria-labelledby="add" className="card relative -mt-16 p-5 sm:-mt-20 sm:p-8">
+          <div className="flex items-center gap-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-night font-bold text-white">1</span>
+            <h2 id="add" className="text-2xl font-bold tracking-tight">Add the papers</h2>
+          </div>
 
           {texts.map((t, i) => (
             <label key={i} className="mt-4 block">
@@ -327,29 +322,31 @@ export default function Home() {
               <textarea
                 value={t}
                 onChange={(e) => setTexts((prev) => prev.map((x, j) => (j === i ? e.target.value : x)))}
-                rows={i === 0 ? 8 : 3}
+                rows={i === 0 ? 7 : 3}
                 placeholder={i === 0 ? "Paste the discharge medication list here, or add photos below." : ""}
-                className="mt-1 block w-full rounded-lg border-2 border-field bg-wash/40 p-3 text-base focus:border-action"
+                className="mt-1.5 block w-full rounded-xl border-2 border-field bg-mist p-3.5 text-base focus:border-action focus:bg-white"
               />
             </label>
           ))}
           {texts.length < 3 ? (
-            <button type="button" onClick={() => setTexts((p) => [...p, ""])} className="mt-2 text-action underline">
-              Add another note (for example a pill bottle label)
+            <button type="button" onClick={() => setTexts((p) => [...p, ""])} className="mt-2 font-bold text-action underline">
+              + Add another note (for example a pill bottle label)
             </button>
           ) : null}
 
-          <div className="mt-5">
+          <div className="mt-6">
             <span className="font-bold">Photos or PDF</span>
             <p className="text-muted">Discharge pages, pill bottles, or the PDF from the patient portal. Up to 4.</p>
-            <div className="mt-2 flex flex-wrap gap-3">
-              <label className="inline-flex min-h-11 cursor-pointer items-center rounded-lg border-2 border-dashed border-action px-4 py-2 font-bold text-action has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-action">
-                Choose photos or PDF
+            <div className="mt-2 grid gap-3 sm:grid-cols-2">
+              <label className="flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-action bg-mist px-4 py-3 hover:bg-white has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-action">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-action text-white"><Files className="h-6 w-6" /></span>
+                <span><span className="block font-bold text-action">Choose photos or PDF</span><span className="block text-sm text-muted">From this device</span></span>
                 <input type="file" accept="image/*,application/pdf" multiple className="sr-only"
                   onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
               </label>
-              <label className="inline-flex min-h-11 cursor-pointer items-center rounded-lg border-2 border-dashed border-action px-4 py-2 font-bold text-action has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-action">
-                Take a photo
+              <label className="flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-action bg-mist px-4 py-3 hover:bg-white has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-action">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-action text-white"><Camera className="h-6 w-6" /></span>
+                <span><span className="block font-bold text-action">Take a photo</span><span className="block text-sm text-muted">Use the camera</span></span>
                 <input type="file" accept="image/*" capture="environment" className="sr-only"
                   onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
               </label>
@@ -358,47 +355,52 @@ export default function Home() {
             {fileError ? <p role="alert" className="mt-2 text-stop">{fileError}</p> : null}
           </div>
 
-          <label className="mt-5 block max-w-sm">
-            <span className="font-bold">Your parent&apos;s language</span>
-            <select value={lang} onChange={(e) => onLanguage(e.target.value)}
-              className="mt-1 block w-full rounded-lg border-2 border-field bg-paper p-2.5 text-base">
-              {LANGS.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
-            </select>
-          </label>
+          <div className="mt-8 flex items-center gap-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-night font-bold text-white">2</span>
+            <label htmlFor="lang" className="text-2xl font-bold tracking-tight">Your parent&apos;s language</label>
+          </div>
+          <select id="lang" value={lang} onChange={(e) => onLanguage(e.target.value)}
+            className="mt-3 block w-full max-w-sm rounded-xl border-2 border-field bg-white p-3 text-base">
+            {LANGS.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
+          </select>
 
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            <button type="button" disabled={!canRun} onClick={() => void run()}
-              className="rounded-xl bg-action px-6 py-3 text-lg font-bold text-white disabled:opacity-40">
+          <div className="mt-8 flex items-center gap-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-night font-bold text-white">3</span>
+            <h2 className="text-2xl font-bold tracking-tight">Build the plan</h2>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button type="button" disabled={!canRun} onClick={() => void run()} className="btn btn-primary px-7 py-3 text-lg">
               {status === "working" ? "Building the plan…" : "Build the plan"}
             </button>
             {status === "working" ? (
-              <button type="button" onClick={() => { cancelledRef.current = true; abortRef.current?.abort(); }}
-                className="min-h-11 rounded-xl border-2 border-action px-5 py-2 font-bold text-action">
+              <button type="button" onClick={() => { cancelledRef.current = true; abortRef.current?.abort(); }} className="btn btn-secondary">
                 Cancel
               </button>
             ) : null}
             {!canRun && status !== "working" ? <span className="text-muted">Add the papers first (paste text or add a photo).</span> : null}
-            <span className="text-muted">No papers handy?</span>
-            {(Object.keys(SAMPLES) as (keyof typeof SAMPLES)[]).map((k) => (
-              <button key={k} type="button" onClick={() => loadSample(k)} className="text-action underline">
-                Try: {SAMPLES[k].label}
-              </button>
-            ))}
-            <button type="button" onClick={() => void loadPhotoSample()} className="text-action underline">
-              Try: Photos of the papers
-            </button>
-            <button type="button" onClick={() => void showSavedExample("heart")} className="text-action underline">
-              See a finished example
-            </button>
-            <button type="button" onClick={() => void showSavedExample("messy")} className="text-action underline">
-              See the messy-sheet example
-            </button>
+          </div>
+
+          <div className="mt-7 rounded-xl bg-mist p-4">
+            <p className="font-bold">No papers handy? Try one of ours.</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {(Object.keys(SAMPLES) as (keyof typeof SAMPLES)[]).map((k) => (
+                <button key={k} type="button" onClick={() => loadSample(k)} className="chip">
+                  {SAMPLES[k].label}
+                </button>
+              ))}
+              <button type="button" onClick={() => void loadPhotoSample()} className="chip">Photos of the papers</button>
+            </div>
+            <p className="mt-3 text-sm text-muted">Or skip the wait and see a finished plan:</p>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              <button type="button" onClick={() => void showSavedExample("heart")} className="chip">See a finished example</button>
+              <button type="button" onClick={() => void showSavedExample("messy")} className="chip">See the messy-sheet example</button>
+            </div>
           </div>
         </section>
 
         {/* Step 2: progress */}
         {status === "working" || (status === "error" && seen.length) ? (
-          <ol className="mt-6 space-y-1 rounded-2xl bg-paper p-5" aria-live="polite">
+          <ol className="card mt-6 space-y-1 p-5" aria-live="polite">
             {STEPS.filter((s) => s.key !== "retrying" || seen.includes("retrying")).map((s) => {
               const done = seen.includes(s.key) && stage !== s.key;
               const now = stage === s.key && status === "working";
@@ -431,34 +433,50 @@ export default function Home() {
                 {lang !== "pa" ? " This saved example has Punjabi only; other languages need a live connection and your own papers." : ""}
               </p>
             ) : null}
-            <section aria-labelledby="week">
-              <h2 id="week" tabIndex={-1} className="text-3xl font-bold outline-none">This week</h2>
-              <p className="mb-4 text-muted">
-                {plan.verified_medications.length} medicines checked against the papers
-                {plan.ask_pharmacist.length ? `, ${plan.ask_pharmacist.length} things to ask the pharmacist` : ""}.
-              </p>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { n: plan.verified_medications.filter((m) => m.status !== "stop").length, label: "medicines checked", tone: "bg-white text-ink" },
+                { n: plan.verified_medications.filter((m) => m.status === "stop").length, label: "to stop", tone: "bg-stop-wash text-stop" },
+                { n: plan.ask_pharmacist.length, label: "to ask the pharmacist", tone: "bg-ask-wash text-ask" },
+              ].map((t) => (
+                <div key={t.label} className={`card px-3 py-3 sm:px-5 ${t.tone}`}>
+                  <p className="text-3xl font-bold leading-none sm:text-4xl">{t.n}</p>
+                  <p className="mt-1 text-sm font-bold sm:text-base">{t.label}</p>
+                </div>
+              ))}
+            </div>
+            <nav aria-label="Jump to a section" className="sticky top-0 z-20 -mx-4 overflow-x-auto bg-wash/90 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
+              <ul className="flex gap-2">
+                {[["week", "This week"], ["ask", "Ask your pharmacist"], ["meds", "All medicines"], ["fridge", "Fridge sheet"]].map(([id, label]) => (
+                  <li key={id}><a href={`#${id}`} className="chip whitespace-nowrap">{label}</a></li>
+                ))}
+              </ul>
+            </nav>
+            <section aria-labelledby="week" className="scroll-mt-16">
+              <h2 id="week" tabIndex={-1} className="section-title outline-none">This week</h2>
+              <p className="mb-4 mt-1 text-muted">Tap any medicine to see the exact line it came from.</p>
               <Organizer plan={plan} />
             </section>
 
-            <section aria-labelledby="ask">
-              <h2 id="ask" className="text-3xl font-bold">Ask your pharmacist</h2>
-              <p className="mb-4 text-muted">CareSheet didn&apos;t put these on the schedule. Show this list at the pharmacy counter.</p>
+            <section aria-labelledby="ask" className="scroll-mt-16">
+              <h2 id="ask" className="section-title">Ask your pharmacist</h2>
+              <p className="mb-4 mt-1 text-muted">CareSheet didn&apos;t put these on the schedule. Show this list at the pharmacy counter.</p>
               <AskPharmacist plan={plan} />
               {!isExample ? <Feedback flags={plan.ask_pharmacist.length} /> : null}
             </section>
 
-            <section aria-labelledby="meds">
-              <h2 id="meds" className="text-3xl font-bold">All medicines</h2>
+            <section aria-labelledby="meds" className="scroll-mt-16">
+              <h2 id="meds" className="section-title">All medicines</h2>
               <div className="mt-4"><MedList plan={plan} lang={lang === "es" ? "es" : "en"} /></div>
             </section>
 
             <section><Notes plan={plan} /></section>
 
-            <section aria-labelledby="fridge">
+            <section aria-labelledby="fridge" className="scroll-mt-16">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <h2 id="fridge" className="text-3xl font-bold">Fridge sheet</h2>
-                  <p className="text-muted">
+                  <h2 id="fridge" className="section-title">Fridge sheet</h2>
+                  <p className="mt-1 text-muted">
                     {translating
                       ? `Translating into ${langName}…`
                       : shownLangName
@@ -482,27 +500,27 @@ export default function Home() {
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-3">
-                <button onClick={() => window.print()} className="rounded-xl bg-action px-4 py-2 font-bold text-white">
-                  Print for the fridge
+                <button onClick={() => window.print()} className="btn btn-primary">
+                  <Printer className="h-5 w-5" /> Print for the fridge
                 </button>
-                <button type="button" onClick={() => downloadIcs(plan)} className="rounded-xl border-2 border-action px-4 py-2 font-bold text-action">
-                  Add reminders to my phone
+                <button type="button" onClick={() => downloadIcs(plan)} className="btn btn-secondary">
+                  <Bell className="h-5 w-5" /> Add reminders to my phone
                 </button>
-                <a className="rounded-xl border-2 border-action px-4 py-2 font-bold text-action" target="_blank" rel="noreferrer"
+                <a className="btn btn-secondary" target="_blank" rel="noreferrer"
                   href={`https://wa.me/?text=${encodeURIComponent(shareText(plan))}`}>
-                  Send to family on WhatsApp
+                  <Chat className="h-5 w-5" /> Send to family on WhatsApp
                 </a>
                 <ReadAloud plan={plan} translations={translations} lang={lang} />
               </div>
               <p className="mt-2 text-sm text-muted">
                 Reminders go into your own phone calendar at 8:00, 12:30, 18:00 and 21:30 for the next week. You can change the times there.
               </p>
-              <div className="mt-4 rounded-2xl bg-wash p-2 shadow-inner sm:p-4">
+              <div className="mt-4 rounded-2xl bg-[#d5dfe5] p-2 shadow-inner sm:p-5">
                 <FridgeSheet plan={plan} translations={translations} languageName={shownLangName} langCode={lang} isExample={isExample} />
               </div>
             </section>
 
-            <details className="rounded-2xl bg-paper p-5">
+            <details className="card p-5">
               <summary className="cursor-pointer font-bold">What CareSheet read (transcript)</summary>
               <p className="mt-2 text-sm text-muted">
                 Every medicine on the schedule was matched against this text by code, not by AI. Photos are transcribed by Claude, so check names against the bottle.
@@ -519,6 +537,7 @@ export default function Home() {
         </div>
       ) : null}
       <div className="no-print"><HowItWorks /></div>
+      </div>
     </main>
   );
 }
