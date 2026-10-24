@@ -48,9 +48,9 @@
   "ask_pharmacist": [
     {
       "kind": "mismatch",
-      "issue": "The discharge sheet says metoprolol succinate was lowered to 25 mg once daily, but the pill bottle at home is 50 mg tablets taking 1 tablet once daily. Which strength and how many tablets should be taken?",
+      "issue": "The discharge sheet says metoprolol succinate 25 mg once daily (dose lowered), but the pill bottle at home is 50 mg tablets. Which strength should be taken, and should the bottle be replaced or the tablets split?",
       "quotes": [
-        "Metoprolol succinate 25 mg - take 1 tablet by mouth once daily. Dose lowered.",
+        "CHANGED: Metoprolol succinate 25 mg - take 1 tablet by mouth once daily. Dose lowered.",
         "Metoprolol succinate ER 50 mg tablets\nTake 1 tablet by mouth once daily."
       ]
     },

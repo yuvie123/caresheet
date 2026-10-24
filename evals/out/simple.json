@@ -30,7 +30,7 @@
       "strength": "50 mcg",
       "dose_amount": 1,
       "dose_unit": "tablet",
-      "frequency_verbatim": "once daily",
+      "frequency_verbatim": "once daily before breakfast",
       "times_per_day": 1,
       "as_needed": false,
       "slots": [
@@ -71,7 +71,7 @@
       "strength": "50 mcg",
       "dose_amount": 1,
       "dose_unit": "tablet",
-      "frequency_verbatim": "once daily",
+      "frequency_verbatim": "once daily before breakfast",
       "times_per_day": 1,
       "as_needed": false,
       "slots": [

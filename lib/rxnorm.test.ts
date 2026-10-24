@@ -61,4 +61,14 @@ describe("rxnorm", () => {
     const found = await findDuplicateIngredients([med("Zzyxolinamide", "10 mg", "stop")]);
     expect(found.unchecked).toEqual([]);
   }, 30_000);
+  it("words a same-medicine-twice finding plainly instead of listing the name twice", async () => {
+    const found = await findDuplicateIngredients([med("Acetaminophen", "500 mg"), { ...med("Acetaminophen", "500 mg"), source_doc: 1 }]);
+    expect(found.findings).toHaveLength(1);
+    expect(found.findings[0].item.issue).toMatch(/same medicine, so count it once/);
+    expect(found.findings[0].item.issue).not.toMatch(/Acetaminophen 500 mg and Acetaminophen 500 mg/);
+  }, 30_000);
+  it("says 'both' for two different brands of one ingredient", async () => {
+    const found = await findDuplicateIngredients([med("Tylenol", "500 mg"), med("Acetaminophen", "500 mg")]);
+    expect(found.findings[0].item.issue).toMatch(/both contain acetaminophen/);
+  }, 30_000);
 });

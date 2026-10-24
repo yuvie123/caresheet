@@ -2,11 +2,11 @@
   "transcript": [
     {
       "doc_index": 0,
-      "text": "FICTIONAL SAMPLE - NOT A REAL PATIENT\nRiverside General Hospital - Discharge Instructions\nPatient: Harbans Kaur        Age: 74\nDischarge date: October 22, 2026\nReason for stay: Fast heart rhythm (atrial fibrillation) and fluid in the lungs\n\nDISCHARGE MEDICATION LIST\nPlease follow this list. It replaces any list you had before.\n\nNEW medications (start taking):\n- Metoprolol tartrate 25 mg - take 1 tablet by mouth twice daily with food.\n- Apixaban 5 mg - take 1 tablet by mouth twice daily, about 12 hours apart. Do not skip doses.\n- Furosemide 20 mg - take 1 tablet by mouth once daily in the morning for 5 days, then stop.\n\nCHANGED medications:\n- Atorvastatin - dose increased. Now take 40 mg (1 tablet) by mouth once daily at bedtime.\n\nCONTINUE taking as before:\n- Metformin 500 mg - take 1 tablet by mouth twice daily with breakfast and dinner.\n- Acetaminophen 500 mg - take 1 to 2 tablets by mouth every 6 hours as needed for pain. Do not take more than 6 tablets in 24 hours.\n\nSTOP taking these medications:\n- Amlodipine 5 mg - STOP. Your blood pressure is now treated with metoprolol.\n- Aspirin 81 mg - STOP. Apixaban replaces aspirin. Taking both increases bleeding risk.\n\nFOLLOW-UP\n- See Dr. Okafor (cardiology) in 1 week. The clinic will call to book.\n- Blood test for kidney function and potassium in 5 days.\n\nWHEN TO GET HELP\nCall your doctor or go to emergency if you have:\n- Chest pain, or a heartbeat that feels very fast or irregular\n- Black or bloody stools, or bleeding that will not stop\n- Swelling in the legs or weight gain of more than 2 kg in 2 days\n- Feeling dizzy or faint"
+      "text": "FICTIONAL SAMPLE - NOT A REAL PATIENT\nRiverside General Hospital - Discharge Instructions\nPatient: Harbans Kaur        Age: 74\nDischarge date: October 22, 2026\nReason for stay: Fast heart rhythm (atrial fibrillation) and fluid in the lungs\n\nDISCHARGE MEDICATION LIST\nPlease follow this list. It replaces any list you had before.\n\nNEW medications (start taking):\n- Metoprolol tartrate 25 mg - take 1 tablet by mouth twice daily with food.\n- Apixaban 5 mg - take 1 tablet by mouth twice daily, about 12 hours apart. Do not skip doses.\n- Furosemide 20 mg - take 1 tablet by mouth once daily in the morning for 5 days, then stop.\n\nCHANGED medications:\n- Atorvastatin - dose increased. Now take 40 mg (1 tablet) by mouth once daily at bedtime.\n\nCONTINUE taking as before:\n- Metformin 500 mg - take 1 tablet by mouth twice daily with breakfast and dinner.\n- Acetaminophen 500 mg - take 1 to 2 tablets by mouth every 6 hours as needed for pain. Do not take more than 6 tablets in 24 hours.\n\nSTOP taking these medications:\n- Amlodipine 5 mg - STOP. Your blood pressure is now treated with metoprolol.\n- Aspirin 81 mg - STOP. Apixaban replaces aspirin. Taking both increases bleeding risk.\n\nFOLLOW-UP\n- See Dr. Okafor (cardiology) in 1 week. The clinic will call to book.\n- Blood test for kidney function and potassium in 5 days.\n\nWHEN TO GET HELP\nCall your doctor or go to emergency if you have:\n- Chest pain, or a heartbeat that feels very fast or irregular\n- Black or bloody stools, or bleeding that will not stop\n- Swelling in the legs or weight gain of more than 2 kg in 2 days\n- Feeling dizzy or faint\n"
     },
     {
       "doc_index": 1,
-      "text": "FICTIONAL SAMPLE BOTTLE LABEL (photographed in the family kitchen)\nExtra Strength TYLENOL\nAcetaminophen 500 mg caplets\nDirections: adults take 2 caplets every 6 hours while symptoms last. Do not take more than 6 caplets in 24 hours."
+      "text": "FICTIONAL SAMPLE BOTTLE LABEL (photographed in the family kitchen)\nExtra Strength TYLENOL\nAcetaminophen 500 mg caplets\nDirections: adults take 2 caplets every 6 hours while symptoms last. Do not take more than 6 caplets in 24 hours.\n"
     }
   ],
   "medications": [
@@ -15,7 +15,7 @@
       "strength": "25 mg",
       "dose_amount": 1,
       "dose_unit": "tablet",
-      "frequency_verbatim": "twice daily with food",
+      "frequency_verbatim": "twice daily",
       "times_per_day": 2,
       "as_needed": false,
       "slots": [
@@ -161,47 +161,54 @@
   ],
   "ask_pharmacist": [
     {
-      "kind": "duplicate",
-      "issue": "The Tylenol bottle in the kitchen contains the same acetaminophen listed on the discharge sheet. Is it the same medicine, and how do we make sure we don't take both?",
+      "kind": "mismatch",
+      "issue": "The Tylenol bottle says to take 2 caplets every 6 hours, while the discharge sheet says 1 to 2 tablets every 6 hours only as needed for pain. Which instruction should be followed, and how many tablets should be taken each time?",
       "quotes": [
-        "Extra Strength TYLENOL\nAcetaminophen 500 mg caplets",
-        "Acetaminophen 500 mg - take 1 to 2 tablets by mouth every 6 hours as needed for pain."
+        "take 1 to 2 tablets by mouth every 6 hours as needed for pain",
+        "adults take 2 caplets every 6 hours while symptoms last"
       ]
     },
     {
-      "kind": "mismatch",
-      "issue": "The bottle says to take 2 caplets every 6 hours while symptoms last, but the discharge sheet says 1 to 2 tablets only as needed for pain. Which instruction should we follow?",
+      "kind": "unclear",
+      "issue": "Acetaminophen is listed with a dose range (1 to 2 tablets). How should the family decide how many to give each time?",
       "quotes": [
-        "adults take 2 caplets every 6 hours while symptoms last",
         "take 1 to 2 tablets by mouth every 6 hours as needed for pain"
+      ]
+    },
+    {
+      "kind": "duplicate",
+      "issue": "Acetaminophen 500 mg and Acetaminophen 500 mg all contain acetaminophen (checked with NIH RxNorm). Should these be taken together, or is one replacing the other?",
+      "quotes": [
+        "Acetaminophen 500 mg - take 1 to 2 tablets by mouth every 6 hours as needed for pain.",
+        "Acetaminophen 500 mg caplets"
       ]
     }
   ],
   "follow_ups": [
     {
-      "text": "See the heart doctor, Dr. Okafor, in 1 week. The clinic will call to book the appointment.",
+      "text": "See the heart doctor (Dr. Okafor) in 1 week. The clinic will call to book the visit.",
       "source_quote": "See Dr. Okafor (cardiology) in 1 week. The clinic will call to book."
     },
     {
-      "text": "Get a blood test to check kidney function and potassium in 5 days.",
+      "text": "Get a blood test for kidney function and potassium in 5 days.",
       "source_quote": "Blood test for kidney function and potassium in 5 days."
     }
   ],
   "warning_signs": [
     {
-      "text": "Chest pain, or a heartbeat that feels very fast or irregular",
+      "text": "Chest pain, or a heartbeat that feels very fast or irregular.",
       "source_quote": "Chest pain, or a heartbeat that feels very fast or irregular"
     },
     {
-      "text": "Black or bloody stools, or bleeding that will not stop",
+      "text": "Black or bloody stools, or bleeding that will not stop.",
       "source_quote": "Black or bloody stools, or bleeding that will not stop"
     },
     {
-      "text": "Swelling in the legs, or weight gain of more than 2 kg in 2 days",
+      "text": "Swelling in the legs or weight gain of more than 2 kg in 2 days.",
       "source_quote": "Swelling in the legs or weight gain of more than 2 kg in 2 days"
     },
     {
-      "text": "Feeling dizzy or faint",
+      "text": "Feeling dizzy or faint.",
       "source_quote": "Feeling dizzy or faint"
     }
   ],
@@ -211,7 +218,7 @@
       "strength": "25 mg",
       "dose_amount": 1,
       "dose_unit": "tablet",
-      "frequency_verbatim": "twice daily with food",
+      "frequency_verbatim": "twice daily",
       "times_per_day": 2,
       "as_needed": false,
       "slots": [

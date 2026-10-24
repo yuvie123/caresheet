@@ -49,6 +49,8 @@ export default function Home() {
   const [translations, setTranslations] = useState<Record<string, string | null> | null>(null);
   const [translating, setTranslating] = useState(false);
   const [translateError, setTranslateError] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+  const cancelledRef = useRef(false);
   const translateRequest = useRef(0); // ignore replies for a language that's no longer selected
   const resultsRef = useRef<HTMLDivElement>(null);
   const reduceMotion = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -218,6 +220,8 @@ export default function Home() {
     files.forEach((f) => form.append("files", f));
 
     const controller = new AbortController();
+    abortRef.current = controller;
+    cancelledRef.current = false;
     const timer = setTimeout(() => controller.abort(), 115_000);
     try {
       if (typeof navigator !== "undefined" && navigator.onLine === false)
@@ -273,6 +277,10 @@ export default function Home() {
       if (!gotResult) throw new Error("The connection ended before the plan was finished. Please try again.");
     } catch (e) {
       const aborted = e instanceof DOMException && e.name === "AbortError";
+      if (aborted && cancelledRef.current) {
+        setStatus("idle"); // the family pressed Cancel: nothing went wrong, so say nothing
+        return;
+      }
       const network = e instanceof TypeError; // fetch could not reach the server at all
       setError(
         aborted
@@ -363,6 +371,12 @@ export default function Home() {
               className="rounded-xl bg-action px-6 py-3 text-lg font-bold text-white disabled:opacity-40">
               {status === "working" ? "Building the plan…" : "Build the plan"}
             </button>
+            {status === "working" ? (
+              <button type="button" onClick={() => { cancelledRef.current = true; abortRef.current?.abort(); }}
+                className="min-h-11 rounded-xl border-2 border-action px-5 py-2 font-bold text-action">
+                Cancel
+              </button>
+            ) : null}
             {!canRun && status !== "working" ? <span className="text-muted">Add the papers first (paste text or add a photo).</span> : null}
             <span className="text-muted">No papers handy?</span>
             {(Object.keys(SAMPLES) as (keyof typeof SAMPLES)[]).map((k) => (

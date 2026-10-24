@@ -18,16 +18,18 @@ const stamp = (d: Date) =>
 // iCalendar text escaping and 75-octet line folding (RFC 5545).
 const esc = (s: string) => s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
 function fold(line: string): string {
+  // Lines over 75 bytes are folded; fold by whole characters so a multi-byte letter is never split.
+  const enc = new TextEncoder();
   const out: string[] = [];
-  let rest = line;
-  while (new TextEncoder().encode(rest).length > 74) {
-    let cut = 74;
-    while (new TextEncoder().encode(rest.slice(0, cut)).length > 74) cut--;
-    out.push(rest.slice(0, cut));
-    rest = " " + rest.slice(cut);
+  let current = "";
+  for (const ch of Array.from(line)) {
+    if (enc.encode(current + ch).length > (out.length ? 74 : 75)) {
+      out.push(current);
+      current = ch;
+    } else current += ch;
   }
-  out.push(rest);
-  return out.join("\r\n");
+  out.push(current);
+  return out.map((l, i) => (i ? " " + l : l)).join("\r\n");
 }
 
 /** Calendar file text. `start` is the first day home (defaults to tomorrow). */
@@ -35,7 +37,7 @@ export function buildIcs(plan: PlanResult, start = new Date(Date.now() + 86_400_
   // Doubtful items (illegible, conflicting, mismatched) get no reminders until the pharmacist confirms.
   const meds = scheduledMeds(plan).filter((m) => !confirmFirst(plan, m));
   const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//CareSheet//Medicine reminders//EN", "CALSCALE:GREGORIAN"];
-  const now = stamp(new Date());
+  const now = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z"; // UTC, as the format requires
 
   for (let day = 0; day < 7; day++) {
     for (const slot of Object.keys(SLOT_TIME) as Slot[]) {

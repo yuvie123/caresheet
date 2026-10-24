@@ -26,7 +26,7 @@
       "with_food": "with_food",
       "status": "new",
       "duration_verbatim": "for 5 days",
-      "source_quote": "Ibuprofen 400 mg",
+      "source_quote": "NEW: Ibuprofen 400 mg - take 1 tablet by mouth every 8 hours with food for 5 days.",
       "source_doc": 0
     },
     {
@@ -43,7 +43,7 @@
       "with_food": "empty_stomach",
       "status": "continue",
       "duration_verbatim": null,
-      "source_quote": "Omeprazole 20 mg",
+      "source_quote": "CONTINUE: Omeprazole 20 mg - take 1 capsule by mouth once daily before breakfast.",
       "source_doc": 0
     },
     {
@@ -65,18 +65,32 @@
   "ask_pharmacist": [
     {
       "kind": "duplicate",
-      "issue": "Advil Liqui-Gels is a brand of ibuprofen, which is also on the discharge sheet. Is it safe to have both at home, and should only one be used? The bottle label says 2 capsules (400 mg) every 4 to 6 hours, while the discharge sheet says 400 mg every 8 hours for 5 days.",
+      "issue": "Advil Liqui-Gels is a brand of ibuprofen, which is also on the discharge sheet as Ibuprofen 400 mg. Is it safe to have both, and should the Advil bottle be used at all?",
       "quotes": [
-        "Ibuprofen 400 mg - take 1 tablet by mouth every 8 hours with food for 5 days.",
-        "Advil Liqui-Gels 200 mg\nTake 2 capsules every 4 to 6 hours while symptoms persist."
+        "Advil Liqui-Gels 200 mg",
+        "NEW: Ibuprofen 400 mg - take 1 tablet by mouth every 8 hours with food for 5 days."
       ]
     },
     {
       "kind": "mismatch",
-      "issue": "The bottle label's schedule (every 4 to 6 hours, no end date, no mention of food) differs from the discharge sheet's schedule (every 8 hours with food for 5 days). Which should be followed?",
+      "issue": "The bottle says 2 capsules of 200 mg every 4 to 6 hours while symptoms persist, but the discharge sheet says 400 mg every 8 hours for 5 days. Which directions should be followed?",
       "quotes": [
-        "every 4 to 6 hours while symptoms persist",
-        "every 8 hours with food for 5 days"
+        "Take 2 capsules every 4 to 6 hours while symptoms persist.",
+        "take 1 tablet by mouth every 8 hours with food for 5 days"
+      ]
+    },
+    {
+      "kind": "unclear",
+      "issue": "The Advil label gives an interval of 4 to 6 hours, so the number of doses per day and a daily schedule are not clear. Is there a maximum per day?",
+      "quotes": [
+        "every 4 to 6 hours while symptoms persist"
+      ]
+    },
+    {
+      "kind": "unclear",
+      "issue": "The Advil label does not say whether to take it with food, and it is not on the discharge sheet. Should it be taken with food?",
+      "quotes": [
+        "Advil Liqui-Gels 200 mg"
       ]
     }
   ],
@@ -99,7 +113,7 @@
       "with_food": "with_food",
       "status": "new",
       "duration_verbatim": "for 5 days",
-      "source_quote": "Ibuprofen 400 mg",
+      "source_quote": "NEW: Ibuprofen 400 mg - take 1 tablet by mouth every 8 hours with food for 5 days.",
       "source_doc": 0
     },
     {
@@ -116,7 +130,7 @@
       "with_food": "empty_stomach",
       "status": "continue",
       "duration_verbatim": null,
-      "source_quote": "Omeprazole 20 mg",
+      "source_quote": "CONTINUE: Omeprazole 20 mg - take 1 capsule by mouth once daily before breakfast.",
       "source_doc": 0
     },
     {

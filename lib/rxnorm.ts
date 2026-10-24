@@ -4,10 +4,33 @@
 import type { Medication, PharmacistItem } from "./schema";
 
 const BASE = "https://rxnav.nlm.nih.gov/REST";
-const TIMEOUT_MS = 6000;
+const TIMEOUT_MS = 4000; // per request
+const DEADLINE_MS = 8000; // per medicine, all requests together
 
 // Used only if RxNav is unreachable (e.g. venue Wi-Fi). Lowercase brand or generic -> ingredient.
-const FALLBACK: Record<string, string> = {
+const FALLBACK: Record<string, string | string[]> = {
+  augmentin: ["amoxicillin", "clavulanate"],
+  amoxicillin: "amoxicillin",
+  clavulanate: "clavulanate",
+  prednisone: "prednisone",
+  deltasone: "prednisone",
+  albuterol: "albuterol",
+  ventolin: "albuterol",
+  proair: "albuterol",
+  spiriva: "tiotropium",
+  tiotropium: "tiotropium",
+  plavix: "clopidogrel",
+  clopidogrel: "clopidogrel",
+  zocor: "simvastatin",
+  simvastatin: "simvastatin",
+  prilosec: "omeprazole",
+  omeprazole: "omeprazole",
+  synthroid: "levothyroxine",
+  levothyroxine: "levothyroxine",
+  xarelto: "rivaroxaban",
+  rivaroxaban: "rivaroxaban",
+  januvia: "sitagliptin",
+  sitagliptin: "sitagliptin",
   tylenol: "acetaminophen",
   paracetamol: "acetaminophen",
   acetaminophen: "acetaminophen",
@@ -55,7 +78,7 @@ type Related = { relatedGroup?: { conceptGroup?: { conceptProperties?: { name?: 
 
 function fallbackLookup(name: string): Ingredient[] | null {
   const words = name.toLowerCase().split(/[^a-z]+/);
-  const hits = new Set(words.map((w) => FALLBACK[w]).filter(Boolean));
+  const hits = new Set(words.flatMap((w) => FALLBACK[w] ?? []));
   return hits.size ? [...hits].map((n) => ({ name: n, rxcui: null })) : null;
 }
 
@@ -70,6 +93,17 @@ export async function ingredientConcepts(name: string): Promise<Lookup> {
   const key = name.toLowerCase().trim();
   const hit = cache.get(key);
   if (hit) return hit;
+  // Never let a slow drug-database lookup hold up the whole plan: after DEADLINE_MS use the offline list.
+  const slow = new Promise<Lookup>((resolve) =>
+    setTimeout(() => {
+      const fb = fallbackLookup(name);
+      resolve(fb ? { concepts: fb, source: "fallback" } : { concepts: null, source: "offline" });
+    }, DEADLINE_MS),
+  );
+  return Promise.race([lookupRxNorm(name, key), slow]);
+}
+
+async function lookupRxNorm(name: string, key: string): Promise<Lookup> {
   try {
     const approx = (await getJson(
       `${BASE}/approximateTerm.json?term=${encodeURIComponent(name)}&maxEntries=5`,
@@ -145,14 +179,14 @@ export async function findDuplicateIngredients(meds: Medication[]): Promise<Dupl
     const viaRx = list.every((l) => l.source === "rxnorm");
     const via = viaRx ? " (checked with NIH RxNorm)" : "";
     if (active.length >= 2) {
+      const sameName = new Set(active.map((l) => l.med.name.toLowerCase().trim())).size === 1;
+      const issue = sameName
+        ? `${label(active[0])} appears more than once (for example on the discharge sheet and on a bottle)${via}. It is the same medicine, so count it once, not twice. Please confirm with the pharmacist.`
+        : `${active.map(label).join(" and ")} ${active.length === 2 ? "both" : "all"} contain ${ingredient}${via}. Should these be taken together, or is one replacing the other?`;
       findings.push({
         ingredient,
         medNames: active.map((l) => l.med.name),
-        item: {
-          kind: "duplicate",
-          issue: `${active.map(label).join(" and ")} all contain ${ingredient}${via}. Should these be taken together, or is one replacing the other?`,
-          quotes: active.map((l) => l.med.source_quote),
-        },
+        item: { kind: "duplicate", issue, quotes: active.map((l) => l.med.source_quote) },
       });
     }
     if (stopped.length >= 1 && active.length >= 1) {
