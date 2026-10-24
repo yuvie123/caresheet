@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/* Colors come from the medicine cabinet: white pharmacy labels, ink, and the coloured lids of a
+   weekly pill organizer (one lid colour per time of day). STOP is the only red on the page. */
+@theme {
+  --color-paper: #ffffff;
+  --color-wash: #eef2f4; /* pale label-backing grey-blue */
+  --color-ink: #17212b;
+  --color-muted: #52606d;
+  --color-rule: #cfd8de;
+  --color-action: #1f5f7a; /* pharmacy blue for buttons and links */
+  --color-stop: #b42318;
+  --color-stop-wash: #fdecea;
+  --color-ask: #8a5a00; /* amber: needs a human */
+  --color-ask-wash: #fff6e0;
+
+  --color-lid-morning: #f2c14e;
+  --color-lid-noon: #7cc6b5;
+  --color-lid-evening: #e8875f;
+  --color-lid-bedtime: #3d4f8f;
+
+  --font-sans: var(--font-atkinson), var(--font-gurmukhi), var(--font-devanagari), system-ui, sans-serif;
+}
+
+html {
+  font-size: 18px; /* everything scales from an 18px base for older eyes */
+}
+
+body {
+  background: var(--color-wash);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-action);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Printing: only the fridge sheet prints, on white, at full contrast. */
+.print-only {
+  display: none;
+}
+@media print {
+  @page {
+    size: letter;
+    margin: 12mm;
+  }
+  body {
+    background: #fff;
+    font-size: 15px;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

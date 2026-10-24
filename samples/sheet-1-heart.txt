@@ -1,0 +1,35 @@
+FICTIONAL SAMPLE - NOT A REAL PATIENT
+Riverside General Hospital - Discharge Instructions
+Patient: Harbans Kaur        Age: 74
+Discharge date: October 22, 2026
+Reason for stay: Fast heart rhythm (atrial fibrillation) and fluid in the lungs
+
+DISCHARGE MEDICATION LIST
+Please follow this list. It replaces any list you had before.
+
+NEW medications (start taking):
+- Metoprolol tartrate 25 mg - take 1 tablet by mouth twice daily with food.
+- Apixaban 5 mg - take 1 tablet by mouth twice daily, about 12 hours apart. Do not skip doses.
+- Furosemide 20 mg - take 1 tablet by mouth once daily in the morning for 5 days, then stop.
+
+CHANGED medications:
+- Atorvastatin - dose increased. Now take 40 mg (1 tablet) by mouth once daily at bedtime.
+
+CONTINUE taking as before:
+- Metformin 500 mg - take 1 tablet by mouth twice daily with breakfast and dinner.
+- Acetaminophen 500 mg - take 1 to 2 tablets by mouth every 6 hours as needed for pain. Do not take more than 6 tablets in 24 hours.
+
+STOP taking these medications:
+- Amlodipine 5 mg - STOP. Your blood pressure is now treated with metoprolol.
+- Aspirin 81 mg - STOP. Apixaban replaces aspirin. Taking both increases bleeding risk.
+
+FOLLOW-UP
+- See Dr. Okafor (cardiology) in 1 week. The clinic will call to book.
+- Blood test for kidney function and potassium in 5 days.
+
+WHEN TO GET HELP
+Call your doctor or go to emergency if you have:
+- Chest pain, or a heartbeat that feels very fast or irregular
+- Black or bloody stools, or bleeding that will not stop
+- Swelling in the legs or weight gain of more than 2 kg in 2 days
+- Feeling dizzy or faint
