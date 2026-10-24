@@ -9,7 +9,7 @@ import { allow, clientIp } from "@/lib/ratelimit";
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  if (!allow(`translate:${clientIp(req)}`, 20, 10 * 60 * 1000)) {
+  if (!allow(`translate:${clientIp(req)}`, Number(process.env.TRANSLATE_LIMIT ?? 60), 10 * 60 * 1000)) {
     return Response.json({ error: "Too many requests. Please wait a few minutes." }, { status: 429 });
   }
   // Strict shape: a known language and a plain object of short strings with simple ids.

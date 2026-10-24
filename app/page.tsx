@@ -60,7 +60,9 @@ export default function Home() {
   async function onFiles(list: FileList | null) {
     if (!list) return;
     setFileError(null);
-    const picked = Array.from(list).slice(0, 4 - files.length);
+    const room = 4 - files.length;
+    const picked = Array.from(list).slice(0, Math.max(room, 0));
+    if (Array.from(list).length > picked.length) setFileError("Up to 4 photos or PDFs. Remove one to add another.");
     const ready: File[] = [];
     const failed: string[] = [];
     for (const f of picked) {
@@ -72,6 +74,11 @@ export default function Home() {
     }
     if (failed.length)
       setFileError(`${failed.join(", ")} couldn't be opened. Please use a JPG or PNG photo (or a screenshot) or a PDF.`);
+    const total = [...files, ...ready].reduce((n, f) => n + f.size, 0);
+    if (total > 4 * 1024 * 1024) {
+      setFileError("Those files are too large together. Remove one, or paste the text instead.");
+      return;
+    }
     setFiles((prev) => [...prev, ...ready].slice(0, 4));
   }
 
@@ -171,10 +178,16 @@ export default function Home() {
     texts.filter((t) => t.trim()).forEach((t) => form.append("text", t));
     files.forEach((f) => form.append("files", f));
 
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 115_000);
     try {
-      const res = await fetch("/api/plan", { method: "POST", body: form });
+      if (typeof navigator !== "undefined" && navigator.onLine === false)
+        throw new Error("You're offline. Connect to the internet to read new papers, or open the finished example.");
+      const res = await fetch("/api/plan", { method: "POST", body: form, signal: controller.signal });
       if (!res.ok || !res.body) {
         const data = await res.json().catch(() => ({}));
+        if (res.status === 413) throw new Error("Those files are too large together. Remove one, or paste the text instead.");
+        if (res.status === 504 || res.status === 502) throw new Error("That took too long. Please try again, or paste the text instead of a photo.");
         throw new Error(data.error ?? "Something went wrong. Please try again.");
       }
       const reader = res.body.getReader();
@@ -217,8 +230,20 @@ export default function Home() {
       handle(buf + decoder.decode());
       if (!gotResult) throw new Error("The connection ended before the plan was finished. Please try again.");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      const aborted = e instanceof DOMException && e.name === "AbortError";
+      const network = e instanceof TypeError; // fetch could not reach the server at all
+      setError(
+        aborted
+          ? "That took too long. Please try again, or paste the text instead of a photo."
+          : network
+            ? "CareSheet couldn't be reached. Check the connection and try again, or open the finished example."
+            : e instanceof Error
+              ? e.message
+              : "Something went wrong.",
+      );
       setStatus("error");
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -264,11 +289,18 @@ export default function Home() {
           <div className="mt-5">
             <span className="font-bold">Photos or PDF</span>
             <p className="text-muted">Discharge pages, pill bottles, or the PDF from the patient portal. Up to 4.</p>
-            <label className="mt-2 inline-flex cursor-pointer items-center rounded-lg border-2 border-dashed border-action px-4 py-2 font-bold text-action">
-              Choose photos or PDF
-              <input type="file" accept="image/*,application/pdf" capture="environment" multiple className="sr-only"
-                onChange={(e) => void onFiles(e.target.files)} />
-            </label>
+            <div className="mt-2 flex flex-wrap gap-3">
+              <label className="inline-flex min-h-11 cursor-pointer items-center rounded-lg border-2 border-dashed border-action px-4 py-2 font-bold text-action has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-action">
+                Choose photos or PDF
+                <input type="file" accept="image/*,application/pdf" multiple className="sr-only"
+                  onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
+              </label>
+              <label className="inline-flex min-h-11 cursor-pointer items-center rounded-lg border-2 border-dashed border-action px-4 py-2 font-bold text-action has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-action">
+                Take a photo
+                <input type="file" accept="image/*" capture="environment" className="sr-only"
+                  onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
+              </label>
+            </div>
             <FileThumbs files={files} onRemove={(i) => setFiles((p) => p.filter((_, j) => j !== i))} />
             {fileError ? <p role="alert" className="mt-2 text-stop">{fileError}</p> : null}
           </div>

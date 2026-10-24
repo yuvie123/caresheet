@@ -10,7 +10,12 @@ import { Plan, type Medication, type PharmacistItem } from "./schema";
 import { normalizeForMatch, verifyPlan, type VerifiedPlan } from "./verify";
 
 export const MODEL = process.env.CARESHEET_MODEL ?? "claude-sonnet-5-5";
-const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
+// Reads ANTHROPIC_API_KEY from the environment. One automatic retry for transient errors; the overall
+// budget for a plan (both calls) is kept under the 120 s function limit in app/api/plan/route.ts.
+const client = new Anthropic({ maxRetries: 1 });
+const FIRST_CALL_MS = 80_000;
+const RETRY_ONLY_IF_UNDER_MS = 45_000; // skip the self-correction retry when the first pass was already slow
+const RETRY_CALL_MS = 35_000;
 
 export type InputDoc =
   | { kind: "text"; text: string; label: string }
@@ -72,14 +77,17 @@ export function withOriginalText(plan: Plan, docs: InputDoc[]): Plan {
   return { ...plan, transcript };
 }
 
-async function callExtract(docs: InputDoc[], feedback?: string): Promise<Plan> {
-  const response = await client.messages.parse({
+async function callExtract(docs: InputDoc[], feedback?: string, timeoutMs = FIRST_CALL_MS): Promise<Plan> {
+  const response = await client.messages.parse(
+    {
     model: MODEL,
     max_tokens: 16000,
     system: EXTRACT_SYSTEM,
     output_config: { effort: "medium", format: zodOutputFormat(Plan) },
     messages: [{ role: "user", content: contentFor(docs, feedback) }],
-  });
+  },
+    { timeout: timeoutMs },
+  );
   if (response.stop_reason === "refusal") throw new Error("Claude declined to process these documents.");
   if (response.stop_reason === "max_tokens") throw new Error("The documents were too long to process in one go.");
   if (!response.parsed_output) throw new Error("Claude's answer did not match the expected format.");
@@ -97,6 +105,7 @@ export type PlanResult = VerifiedPlan & {
 
 /** Full pipeline: extract, verify, retry once with feedback, verify again, check duplicate ingredients. */
 export async function extractPlan(docs: InputDoc[], onProgress: (p: Progress) => void = () => {}): Promise<PlanResult> {
+  const started = Date.now();
   onProgress("reading");
   let plan = await callExtract(docs);
 
@@ -105,13 +114,23 @@ export async function extractPlan(docs: InputDoc[], onProgress: (p: Progress) =>
   let retried = false;
 
   const firstFailures = verified.failures;
-  if (verified.failures.length > 0) {
+  if (verified.failures.length > 0 && Date.now() - started < RETRY_ONLY_IF_UNDER_MS) {
     onProgress("retrying");
     retried = true;
     const feedback = verified.failures.map((f) => `- ${f.medication}: ${f.reason}`).join("\n");
-    plan = await callExtract(docs, feedback);
+    try {
+      const second = await callExtract(docs, feedback, RETRY_CALL_MS);
+      const secondVerified = verifyPlan(second);
+      // Only keep the second attempt if it is at least as good; never trade a good answer for a worse one.
+      if (secondVerified.failures.length <= verified.failures.length) {
+        plan = second;
+        verified = secondVerified;
+      }
+    } catch (err) {
+      // The first pass is already safe: its unverified items went to the pharmacist list. Keep it.
+      console.error("retry skipped:", err instanceof Error ? err.name : "unknown");
+    }
     onProgress("verifying");
-    verified = verifyPlan(plan);
   }
 
   onProgress("checking_ingredients");
