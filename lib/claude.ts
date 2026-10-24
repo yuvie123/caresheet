@@ -56,6 +56,21 @@ function contentFor(docs: InputDoc[], feedback?: string): Anthropic.ContentBlock
   return blocks;
 }
 
+/**
+ * For pasted text the family's own words ARE the ground truth, so verify against them directly instead of
+ * against Claude's copy of them. (For photos and PDFs the transcript is necessarily Claude's reading.)
+ */
+export function withOriginalText(plan: Plan, docs: InputDoc[]): Plan {
+  const transcript = [...plan.transcript];
+  docs.forEach((d, i) => {
+    if (d.kind !== "text") return;
+    const at = transcript.findIndex((t) => t.doc_index === i);
+    if (at >= 0) transcript[at] = { doc_index: i, text: d.text };
+    else transcript.push({ doc_index: i, text: d.text });
+  });
+  return { ...plan, transcript };
+}
+
 async function callExtract(docs: InputDoc[], feedback?: string): Promise<Plan> {
   const response = await client.messages.parse({
     model: MODEL,
@@ -67,7 +82,7 @@ async function callExtract(docs: InputDoc[], feedback?: string): Promise<Plan> {
   if (response.stop_reason === "refusal") throw new Error("Claude declined to process these documents.");
   if (response.stop_reason === "max_tokens") throw new Error("The documents were too long to process in one go.");
   if (!response.parsed_output) throw new Error("Claude's answer did not match the expected format.");
-  return response.parsed_output;
+  return withOriginalText(response.parsed_output, docs);
 }
 
 export type PlanResult = VerifiedPlan & {

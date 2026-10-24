@@ -4,13 +4,13 @@
 "use client";
 import { useState } from "react";
 import type { PlanResult } from "@/lib/claude";
-import { activeOnDay, doseText, scheduledMeds, UI_STRINGS, usedSlots } from "@/lib/render";
+import { activeOnDay, confirmFirst, doseText, scheduledMeds, UI_STRINGS, unscheduledMeds, usedSlots } from "@/lib/render";
 import type { Medication, Slot } from "@/lib/schema";
 import { Plate, SLOT_ICON, SLOT_LID } from "./Icons";
 
 const DAY = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"];
 
-function Pill({ med, onQuote }: { med: Medication; onQuote: (m: Medication) => void }) {
+function Pill({ med, onQuote, doubtful }: { med: Medication; onQuote: (m: Medication) => void; doubtful: boolean }) {
   const dose = doseText(med);
   return (
     <button
@@ -23,6 +23,7 @@ function Pill({ med, onQuote }: { med: Medication; onQuote: (m: Medication) => v
       {med.with_food === "with_food" ? (
         <Plate className="mt-0.5 h-4 w-4 text-muted" title={UI_STRINGS.with_food} />
       ) : null}
+      {doubtful ? <span className="mt-1 block rounded bg-ask-wash px-1 text-[0.7rem] font-bold text-ask">Confirm first</span> : null}
     </button>
   );
 }
@@ -62,7 +63,7 @@ export default function Organizer({ plan }: { plan: PlanResult }) {
                   <Icon className="h-5 w-5" /> {UI_STRINGS[`slot_${slot}`]}
                 </div>
                 <div className="space-y-1.5 bg-wash/60 p-2">
-                  {items.length ? items.map((m) => <Pill key={plan.verified_medications.indexOf(m)} med={m} onQuote={setQuoted} />) : (
+                  {items.length ? items.map((m) => <Pill key={plan.verified_medications.indexOf(m)} med={m} onQuote={setQuoted} doubtful={confirmFirst(plan, m)} />) : (
                     <p className="px-1 text-sm text-muted">Nothing</p>
                   )}
                 </div>
@@ -91,7 +92,7 @@ export default function Organizer({ plan }: { plan: PlanResult }) {
                   return (
                     <div key={d} className="min-h-20 space-y-1 rounded-lg border-t-4 bg-paper/70 p-1.5"
                       style={{ borderTopColor: `var(--color-lid-${slot})` }}>
-                      {items.map((m) => <Pill key={plan.verified_medications.indexOf(m)} med={m} onQuote={setQuoted} />)}
+                      {items.map((m) => <Pill key={plan.verified_medications.indexOf(m)} med={m} onQuote={setQuoted} doubtful={confirmFirst(plan, m)} />)}
                     </div>
                   );
                 })}
@@ -101,6 +102,19 @@ export default function Organizer({ plan }: { plan: PlanResult }) {
         </div>
       </div>
 
+      {unscheduledMeds(plan).length ? (
+        <div className="mt-4 rounded-xl border-2 border-dashed border-ask bg-ask-wash p-3">
+          <p className="font-bold text-ask">Not on the grid: ask the pharmacist when to take these</p>
+          <ul className="mt-1 list-disc pl-5">
+            {unscheduledMeds(plan).map((m) => (
+              <li key={plan.verified_medications.indexOf(m)}>
+                <span className="font-bold">{m.name}</span> {m.strength}: {m.frequency_verbatim}
+                {m.duration_verbatim ? `, ${m.duration_verbatim}` : ""}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <p className="mt-3 text-sm text-muted">
         Times of day are suggestions based on the sheet&apos;s wording. Tap any medicine to see the exact line it came from.
       </p>

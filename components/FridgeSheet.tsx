@@ -6,10 +6,12 @@ import type { PlanResult } from "@/lib/claude";
 import {
   activeOnDay,
   asNeededMeds,
+  confirmFirst,
   doseNumber,
   durationDays,
   scheduledMeds,
   stoppedMeds,
+  unscheduledMeds,
   UI_STRINGS,
   usedSlots,
   type UiKey,
@@ -51,7 +53,7 @@ function TickRow({ med, slot }: { med: Medication; slot: Slot }) {
   );
 }
 
-function MedLine({ med, index, slot, t }: { med: Medication; index: number; slot: Slot; t: T | null }) {
+function MedLine({ med, index, slot, t, doubtful }: { med: Medication; index: number; slot: Slot; t: T | null; doubtful: boolean }) {
   const days = durationDays(med);
   return (
     <li className="flex min-w-0 gap-3 border-b border-rule py-1.5 last:border-0" style={{ breakInside: "avoid" }}>
@@ -71,6 +73,11 @@ function MedLine({ med, index, slot, t }: { med: Medication; index: number; slot
             />
           ) : null}
         </div>
+        {doubtful ? (
+          <div className="mt-1 inline-block rounded border-2 border-ask px-1.5 text-xs font-bold text-ask">
+            <Bi id="confirm_first" en={UI_STRINGS.confirm_first} t={t} />
+          </div>
+        ) : null}
         <TickRow med={med} slot={slot} />
       </div>
       {med.dose_amount !== null ? (
@@ -100,6 +107,7 @@ export default function FridgeSheet({
   const slots = usedSlots(plan);
   const stopped = stoppedMeds(plan);
   const asNeeded = asNeededMeds(plan);
+  const unscheduled = unscheduledMeds(plan);
 
   return (
     <div className="space-y-6 print:block print:space-y-0">
@@ -141,7 +149,7 @@ export default function FridgeSheet({
                 </h3>
                 <ul className="px-3 py-1">
                   {meds.map((m) => (
-                    <MedLine key={idx(m)} med={m} index={idx(m)} slot={slot} t={translations} />
+                    <MedLine key={idx(m)} med={m} index={idx(m)} slot={slot} t={translations} doubtful={confirmFirst(plan, m)} />
                   ))}
                 </ul>
               </section>
@@ -157,6 +165,22 @@ export default function FridgeSheet({
         aria-label="Fridge sheet, page 2"
       >
         <h2 className="border-b-4 border-ink pb-2 text-2xl font-bold">{label("page2_title")}</h2>
+
+        {unscheduled.length ? (
+          <section className="mt-3 rounded-lg border-2 border-dashed border-ask bg-ask-wash px-3 py-1">
+            <h3 className="pt-1 font-bold text-ask">{label("unscheduled_title")}</h3>
+            <ul>
+              {unscheduled.map((m) => (
+                <li key={idx(m)} className="border-b border-rule py-1.5 last:border-0">
+                  <span className="font-bold">{m.name}</span> {m.strength}
+                  <div className="text-[0.85em] text-muted">
+                    <Bi id={`freq_${idx(m)}`} en={m.frequency_verbatim} t={translations} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         {asNeeded.length ? (
           <section className="mt-3 rounded-lg border-2 border-dashed border-ink px-3 py-1">

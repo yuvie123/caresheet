@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { extractNumbers, introducesNewNumber, normalizeDigits } from "./digits";
+import { withOriginalText } from "./claude";
 import type { Medication, Plan } from "./schema";
-import { doseNumbersInQuote, findQuote, normalizeForMatch, quoteIsGrounded, verifyPlan } from "./verify";
+import { doseNumbersInQuote, findQuote, isTaper, normalizeForMatch, quoteIsGrounded, verifyPlan } from "./verify";
 
 const med = (over: Partial<Medication>): Medication => ({
   name: "Metoprolol tartrate",
@@ -159,5 +160,57 @@ describe("quote matching respects word boundaries", () => {
     p.transcript[0].text = "Warfarin 50 mg - take 1 tablet by mouth daily.";
     p.medications = [med({ name: "Warfarin", strength: "5 mg", source_quote: "Warfarin 5", dose_amount: 1 })];
     expect(verifyPlan(p).verified_medications).toHaveLength(0);
+  });
+});
+
+describe("pasted text is verified against the family's own words", () => {
+  it("replaces Claude's transcript of a text document with the original", () => {
+    const original = "Warfarin 5 mg - take 1 tablet daily.";
+    const p = plan([]);
+    p.transcript = [{ doc_index: 0, text: "Warfarin 10 mg - take 1 tablet daily." }]; // Claude mis-copied
+    const fixed = withOriginalText(p, [{ kind: "text", text: original, label: "x" }]);
+    expect(fixed.transcript[0].text).toBe(original);
+  });
+  it("catches a dose Claude mis-copied in its transcript", () => {
+    const original = "Warfarin 5 mg - take 1 tablet daily.";
+    const p = plan([]);
+    p.transcript = [{ doc_index: 0, text: "Warfarin 10 mg - take 1 tablet daily." }];
+    p.medications = [med({ name: "Warfarin", strength: "10 mg", source_quote: "Warfarin 10 mg - take 1 tablet daily." })];
+    const v = verifyPlan(withOriginalText(p, [{ kind: "text", text: original, label: "x" }]));
+    expect(v.verified_medications).toHaveLength(0);
+  });
+  it("leaves photo transcripts alone", () => {
+    const p = plan([]);
+    const before = p.transcript[0].text;
+    const fixed = withOriginalText(p, [{ kind: "image", mediaType: "image/jpeg", base64: "", label: "p.jpg" }]);
+    expect(fixed.transcript[0].text).toBe(before);
+  });
+});
+
+describe("automatic pharmacist cards", () => {
+  it("recognises tapers but not 'then stop'", () => {
+    expect(isTaper(med({ duration_verbatim: "40 mg for 3 days, then 20 mg for 3 days" }))).toBe(true);
+    expect(isTaper(med({ frequency_verbatim: "taper over 2 weeks" }))).toBe(true);
+    expect(isTaper(med({ duration_verbatim: "for 5 days, then stop" }))).toBe(false);
+    expect(isTaper(med({ duration_verbatim: "for 7 days" }))).toBe(false);
+  });
+  it("adds a card for a taper that has no card yet", () => {
+    const p = plan([]);
+    const text = "Metoprolol tartrate 25 mg - take 1 tablet by mouth twice daily for 3 days, then 20 mg for 3 days.";
+    p.transcript = [{ doc_index: 0, text }];
+    p.medications = [med({ duration_verbatim: "for 3 days, then 20 mg for 3 days", source_quote: text })];
+    const v = verifyPlan(p);
+    expect(v.ask_pharmacist.some((c) => c.kind === "unclear" && /more than one step/.test(c.issue))).toBe(true);
+  });
+  it("adds a card for an unclear-status medicine with none", () => {
+    const p = plan([]);
+    p.medications = [med({ status: "unclear" })];
+    expect(verifyPlan(p).ask_pharmacist.some((c) => /don't say clearly/.test(c.issue))).toBe(true);
+  });
+  it("does not add a second card when one already mentions the medicine", () => {
+    const p = plan([]);
+    p.ask_pharmacist = [{ kind: "mismatch", issue: "The metoprolol dose differs between the sheet and the bottle.", quotes: [] }];
+    p.medications = [med({ status: "unclear" })];
+    expect(verifyPlan(p).ask_pharmacist).toHaveLength(1);
   });
 });

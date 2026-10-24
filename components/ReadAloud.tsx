@@ -3,7 +3,7 @@
 "use client";
 import { useState, useSyncExternalStore } from "react";
 import type { PlanResult } from "@/lib/claude";
-import { doseNumber, scheduledMeds, stoppedMeds, UI_STRINGS, usedSlots, type UiKey } from "@/lib/render";
+import { confirmFirst, doseNumber, scheduledMeds, stoppedMeds, UI_STRINGS, unscheduledMeds, usedSlots, type UiKey } from "@/lib/render";
 
 const VOICE_LANG: Record<string, string> = { pa: "pa", hi: "hi", es: "es", "": "en" };
 
@@ -66,6 +66,12 @@ export default function ReadAloud({
           ".",
       );
     }
+    const unscheduled = unscheduledMeds(plan);
+    if (unscheduled.length)
+      parts.push(`${t("unscheduled_title", UI_STRINGS.unscheduled_title)}: ${unscheduled.map((m) => m.name).join(", ")}.`);
+    const doubtful = scheduledMeds(plan).filter((m) => confirmFirst(plan, m));
+    if (doubtful.length)
+      parts.push(`${t("confirm_first", UI_STRINGS.confirm_first)}: ${[...new Set(doubtful.map((m) => m.name))].join(", ")}.`);
     return parts;
   }
 

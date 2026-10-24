@@ -2,7 +2,7 @@
 // Opening it on a phone adds alarms to the family's own calendar. Runs in the browser; nothing is sent
 // anywhere. Times are suggestions the family can edit in their calendar.
 import type { PlanResult } from "./claude";
-import { activeOnDay, doseText, scheduledMeds, UI_STRINGS } from "./render";
+import { activeOnDay, confirmFirst, doseText, scheduledMeds, UI_STRINGS } from "./render";
 import type { Slot } from "./schema";
 
 export const SLOT_TIME: Record<Slot, [number, number]> = {
@@ -32,7 +32,8 @@ function fold(line: string): string {
 
 /** Calendar file text. `start` is the first day home (defaults to tomorrow). */
 export function buildIcs(plan: PlanResult, start = new Date(Date.now() + 86_400_000)): string {
-  const meds = scheduledMeds(plan);
+  // Doubtful items (illegible, conflicting, mismatched) get no reminders until the pharmacist confirms.
+  const meds = scheduledMeds(plan).filter((m) => !confirmFirst(plan, m));
   const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//CareSheet//Medicine reminders//EN", "CALSCALE:GREGORIAN"];
   const now = stamp(new Date());
 

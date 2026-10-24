@@ -29,6 +29,10 @@ describe("verifier regression on saved real outputs", () => {
       const after = verifyPlan(plan);
       const stillThere = new Set(after.verified_medications.map((m) => m.source_quote));
       const lost = before.filter((m) => !stillThere.has(m.source_quote)).map((m) => m.name);
+      expect(
+        after.ask_pharmacist.length,
+        "the verifier added new pharmacist cards to a saved real output (noise)",
+      ).toBe((plan as unknown as { ask_pharmacist: unknown[] }).ask_pharmacist.length);
       expect(lost, `medicines newly rejected: ${lost.join(", ")}; reasons: ${JSON.stringify(after.failures)}`).toEqual([]);
     });
   }

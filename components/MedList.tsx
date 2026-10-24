@@ -1,7 +1,7 @@
 // The reconciliation view: what's new, what changed, what continues, and what to STOP.
 // Missing a STOP is one of the most common mistakes after discharge, so it comes first and in red.
 import type { PlanResult } from "@/lib/claude";
-import { doseText } from "@/lib/render";
+import { confirmFirst, doseText } from "@/lib/render";
 import type { Medication } from "@/lib/schema";
 import { Ban, Plate } from "./Icons";
 import MedInfo from "./MedInfo";
@@ -14,7 +14,7 @@ const GROUPS: { status: Medication["status"]; title: string; note: string }[] = 
   { status: "unclear", title: "Status unclear", note: "The papers don't say clearly. Ask the pharmacist." },
 ];
 
-function Row({ med, lang }: { med: Medication; lang: "en" | "es" }) {
+function Row({ med, lang, doubtful }: { med: Medication; lang: "en" | "es"; doubtful: boolean }) {
   const dose = doseText(med);
   const stop = med.status === "stop";
   return (
@@ -24,6 +24,7 @@ function Row({ med, lang }: { med: Medication; lang: "en" | "es" }) {
         <span className={`text-lg font-bold ${stop ? "text-stop line-through decoration-2" : ""}`}>{med.name}</span>
         <span>{med.strength}</span>
         {dose && !stop ? <span className="text-muted">· {dose}</span> : null}
+        {doubtful && !stop ? <span className="rounded bg-ask-wash px-2 py-0.5 text-sm font-bold text-ask">Confirm with the pharmacist first</span> : null}
       </div>
       {!stop ? (
         <p className="mt-1 flex items-center gap-1.5 text-muted">
@@ -54,7 +55,7 @@ export default function MedList({ plan, lang = "en" }: { plan: PlanResult; lang?
               {g.title} <span className="font-normal text-muted">({meds.length})</span>
             </h3>
             <p className="mb-2 text-muted">{g.note}</p>
-            <ul className="space-y-2">{meds.map((m) => <Row key={`${m.name}-${m.source_quote}`} med={m} lang={lang} />)}</ul>
+            <ul className="space-y-2">{meds.map((m) => <Row key={`${m.name}-${m.source_quote}`} med={m} lang={lang} doubtful={confirmFirst(plan, m)} />)}</ul>
           </section>
         );
       })}

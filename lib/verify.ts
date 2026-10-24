@@ -118,6 +118,13 @@ export function numbersGrounded(med: Medication, matchedQuote: string, doc: stri
   );
 }
 
+/** A multi-step schedule: the word "taper", or "then" followed by a next dose ("then 20 mg"), not "then stop". */
+export function isTaper(m: Medication): boolean {
+  return /taper|\bthen\s+(?:take\s+|reduce\s+to\s+|decrease\s+to\s+|increase\s+to\s+)?(?:\d|half|one|two|three)/i.test(
+    `${m.duration_verbatim ?? ""} ${m.frequency_verbatim}`,
+  );
+}
+
 export type VerifyFailure = { medication: string; reason: string };
 
 export type VerifiedPlan = Plan & {
@@ -155,6 +162,42 @@ export function verifyPlan(plan: Plan): VerifiedPlan {
       });
     } else {
       verified.push(med);
+    }
+  }
+
+  // Automatic pharmacist cards for things the family must not miss, only when no existing card already
+  // covers that medicine (so the list stays short).
+  const covered = (m: Medication, cards: PharmacistItem[]) => {
+    const words = normalizeForMatch(m.name).split(" ").filter((w) => w.length >= 4);
+    const q = normalizeForMatch(m.source_quote);
+    return cards.some((c) => {
+      const issue = c.issue.toLowerCase();
+      const quotesMatch = c.quotes.some((x) => {
+        const n = normalizeForMatch(x);
+        return n === q || (n.length > 12 && q.includes(n)) || (q.length > 12 && n.includes(q));
+      });
+      return words.some((w) => issue.includes(w)) || quotesMatch;
+    });
+  };
+  const allCards = [...plan.ask_pharmacist, ...extraQuestions];
+  for (const m of verified) {
+    if (covered(m, allCards)) continue;
+    if (m.status === "unclear") {
+      const c: PharmacistItem = {
+        kind: "unclear",
+        issue: `The papers don't say clearly whether to start, change, continue or stop ${m.name}${m.strength ? ` ${m.strength}` : ""}. Please confirm.`,
+        quotes: [m.source_quote],
+      };
+      extraQuestions.push(c);
+      allCards.push(c);
+    } else if (m.status !== "stop" && isTaper(m)) {
+      const c: PharmacistItem = {
+        kind: "unclear",
+        issue: `${m.name} has more than one step (a taper). CareSheet shows the first step only. Please go through the later steps with the pharmacist.`,
+        quotes: [m.source_quote],
+      };
+      extraQuestions.push(c);
+      allCards.push(c);
     }
   }
 
