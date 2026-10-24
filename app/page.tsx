@@ -3,14 +3,17 @@
 // 1. Add the hospital papers (paste, photos, or PDF) and pick the family's language.
 // 2. Watch the steps run (read, double-check, check ingredients).
 // 3. See the pill organizer, the med list, pharmacist questions, and print the fridge sheet.
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AskPharmacist from "@/components/AskPharmacist";
 import FridgeSheet from "@/components/FridgeSheet";
+import HowItWorks from "@/components/HowItWorks";
 import MedList from "@/components/MedList";
 import Notes from "@/components/Notes";
 import Organizer from "@/components/Organizer";
+import ReadAloud from "@/components/ReadAloud";
 import type { PlanResult, Progress } from "@/lib/claude";
 import { compressImage } from "@/lib/compress";
+import { downloadIcs } from "@/lib/ics";
 import { shareText, translatableStrings } from "@/lib/render";
 import { SAMPLES } from "@/lib/samples";
 
@@ -71,6 +74,13 @@ export default function Home() {
     setStatus("done");
     requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }));
   }
+
+  // caresheet.vercel.app/?example opens the saved example straight away (handy link for judges).
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has("example")) return;
+    const t = setTimeout(() => void showSavedExample(), 0); // after first render, not during it
+    return () => clearTimeout(t);
+  }, []);
 
   async function translate(p: PlanResult, code: string) {
     setTranslations(null);
@@ -250,7 +260,7 @@ export default function Home() {
 
       {/* Step 3: results */}
       {plan ? (
-        <div ref={resultsRef} className="mt-10 space-y-10">
+        <div ref={resultsRef} className="mt-10 space-y-10 print:mt-0 print:space-y-0">
           <div className="no-print space-y-10">
             <section aria-labelledby="week">
               <h2 id="week" className="text-3xl font-bold">This week</h2>
@@ -269,7 +279,7 @@ export default function Home() {
 
             <section aria-labelledby="meds">
               <h2 id="meds" className="text-3xl font-bold">All medicines</h2>
-              <div className="mt-4"><MedList plan={plan} /></div>
+              <div className="mt-4"><MedList plan={plan} lang={lang === "es" ? "es" : "en"} /></div>
             </section>
 
             <section><Notes plan={plan} /></section>
@@ -282,14 +292,23 @@ export default function Home() {
                     {translating ? `Translating into ${langName}…` : langName ? `English and ${langName}. Numbers are never translated, only words.` : "English."}
                   </p>
                 </div>
-                <div className="flex gap-3">
-                  <a className="rounded-xl border-2 border-action px-4 py-2 font-bold text-action" target="_blank" rel="noreferrer"
-                    href={`https://wa.me/?text=${encodeURIComponent(shareText(plan))}`}>
-                    Send to family on WhatsApp
-                  </a>
-                  <button onClick={() => window.print()} className="rounded-xl bg-action px-4 py-2 font-bold text-white">Print</button>
-                </div>
               </div>
+              <div className="mt-3 flex flex-wrap gap-3">
+                <button onClick={() => window.print()} className="rounded-xl bg-action px-4 py-2 font-bold text-white">
+                  Print for the fridge
+                </button>
+                <button type="button" onClick={() => downloadIcs(plan)} className="rounded-xl border-2 border-action px-4 py-2 font-bold text-action">
+                  Add reminders to my phone
+                </button>
+                <a className="rounded-xl border-2 border-action px-4 py-2 font-bold text-action" target="_blank" rel="noreferrer"
+                  href={`https://wa.me/?text=${encodeURIComponent(shareText(plan))}`}>
+                  Send to family on WhatsApp
+                </a>
+                <ReadAloud plan={plan} translations={translations} lang={lang} />
+              </div>
+              <p className="mt-2 text-sm text-muted">
+                Reminders go into your own phone calendar at 8:00, 12:30, 18:00 and 21:30 for the next week. You can change the times there.
+              </p>
               <div className="mt-4 rounded-2xl bg-wash p-2 shadow-inner sm:p-4">
                 <FridgeSheet plan={plan} translations={translations} languageName={langName} />
               </div>
@@ -311,6 +330,7 @@ export default function Home() {
           </div>
         </div>
       ) : null}
+      <div className="no-print"><HowItWorks /></div>
     </main>
   );
 }

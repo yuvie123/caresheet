@@ -21,6 +21,11 @@ export const UI_STRINGS = {
   warning_title: "Call the doctor if",
   followup_title: "Appointments and tests",
   not_advice: "Made from the hospital papers. Check with your pharmacist.",
+  tick_hint: "Tick a box each time it is taken. A grey box means none that day.",
+  day: "Day",
+  then_stop: "then stop",
+  pharmacist_title: "Questions for the pharmacist",
+  page2_title: "Also important",
 } as const;
 
 export type UiKey = keyof typeof UI_STRINGS;
@@ -32,7 +37,32 @@ export function strengthText(med: Medication): string {
 
 export function doseNumber(med: Medication): string {
   if (med.dose_amount === null) return "";
-  return Number.isInteger(med.dose_amount) ? String(med.dose_amount) : String(med.dose_amount);
+  return String(med.dose_amount);
+}
+
+/** "2 caplets", "1 tablet", "0.5 tablet". Empty when the sheet gives no amount ("1 to 2 tablets"). */
+export function doseText(med: Medication): string {
+  if (med.dose_amount === null || !med.dose_unit) return "";
+  const unit = med.dose_amount > 1 && !/s$/i.test(med.dose_unit) ? `${med.dose_unit}s` : med.dose_unit;
+  return `${doseNumber(med)} ${unit}`;
+}
+
+/** Number of days from "for 5 days", "x 7 days", "for 3 days, then stop". null = ongoing. */
+export function durationDays(med: Medication): number | null {
+  const m = `${med.duration_verbatim ?? ""} ${med.frequency_verbatim}`.match(/(\d+)\s*days?\b/i);
+  return m ? Number(m[1]) : null;
+}
+
+/** Is this medicine taken on day `dayIndex` (0 = first day home)? */
+export function activeOnDay(med: Medication, dayIndex: number): boolean {
+  const d = durationDays(med);
+  return d === null || dayIndex < d;
+}
+
+/** Slots that have at least one medicine during the week. */
+export function usedSlots(plan: PlanResult): Slot[] {
+  const meds = scheduledMeds(plan);
+  return SLOT_ORDER.filter((s) => meds.some((m) => m.slots.includes(s)));
 }
 
 /** Medications that belong in the daily organizer. */

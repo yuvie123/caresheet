@@ -38,7 +38,8 @@ const FALLBACK: Record<string, string> = {
   lisinopril: "lisinopril",
 };
 
-const cache = new Map<string, string[] | null>();
+export type Ingredient = { name: string; rxcui: string | null };
+const cache = new Map<string, Ingredient[] | null>();
 
 async function getJson(url: string): Promise<unknown> {
   const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
@@ -47,12 +48,12 @@ async function getJson(url: string): Promise<unknown> {
 }
 
 type Approx = { approximateGroup?: { candidate?: { rxcui?: string; score?: string; source?: string }[] } };
-type Related = { relatedGroup?: { conceptGroup?: { conceptProperties?: { name?: string }[] }[] } };
+type Related = { relatedGroup?: { conceptGroup?: { conceptProperties?: { name?: string; rxcui?: string }[] }[] } };
 
-function fallbackLookup(name: string): string[] | null {
+function fallbackLookup(name: string): Ingredient[] | null {
   const words = name.toLowerCase().split(/[^a-z]+/);
   const hits = new Set(words.map((w) => FALLBACK[w]).filter(Boolean));
-  return hits.size ? [...hits] : null;
+  return hits.size ? [...hits].map((n) => ({ name: n, rxcui: null })) : null;
 }
 
 /**
@@ -60,8 +61,14 @@ function fallbackLookup(name: string): string[] | null {
  * `source` says whether the answer came from RxNorm or the offline fallback list.
  */
 export async function ingredientsFor(name: string): Promise<{ ingredients: string[] | null; source: "rxnorm" | "fallback" }> {
+  const r = await ingredientConcepts(name);
+  return { ingredients: r.concepts ? r.concepts.map((c) => c.name) : null, source: r.source };
+}
+
+/** Same lookup, but keeps each ingredient's RxNorm ID (used for MedlinePlus links). */
+export async function ingredientConcepts(name: string): Promise<{ concepts: Ingredient[] | null; source: "rxnorm" | "fallback" }> {
   const key = name.toLowerCase().trim();
-  if (cache.has(key)) return { ingredients: cache.get(key)!, source: "rxnorm" };
+  if (cache.has(key)) return { concepts: cache.get(key)!, source: "rxnorm" };
   try {
     const approx = (await getJson(
       `${BASE}/approximateTerm.json?term=${encodeURIComponent(name)}&maxEntries=5`,
@@ -78,22 +85,26 @@ export async function ingredientsFor(name: string): Promise<{ ingredients: strin
       // (amoxicillin / clavulanate -> both). Do NOT ask for MIN: for a plain ingredient that returns
       // every combination product containing it (acetaminophen + codeine, + caffeine, ...).
       const related = (await getJson(`${BASE}/rxcui/${c.rxcui}/related.json?tty=IN`)) as Related;
-      const names = (related.relatedGroup?.conceptGroup ?? [])
-        .flatMap((g) => g.conceptProperties ?? [])
-        .map((p) => (p.name ?? "").toLowerCase())
-        .filter(Boolean);
-      if (names.length) {
-        const result = [...new Set(names)];
-        cache.set(key, result);
-        return { ingredients: result, source: "rxnorm" };
+      const seen = new Set<string>();
+      const concepts: Ingredient[] = [];
+      for (const p of (related.relatedGroup?.conceptGroup ?? []).flatMap((g) => g.conceptProperties ?? [])) {
+        const n = (p.name ?? "").toLowerCase();
+        if (n && !seen.has(n)) {
+          seen.add(n);
+          concepts.push({ name: n, rxcui: p.rxcui ?? null });
+        }
+      }
+      if (concepts.length) {
+        cache.set(key, concepts);
+        return { concepts, source: "rxnorm" };
       }
     }
     // RxNorm couldn't identify it; the offline list may still know the brand.
     const fb = fallbackLookup(name);
     cache.set(key, fb);
-    return { ingredients: fb, source: fb ? "fallback" : "rxnorm" };
+    return { concepts: fb, source: fb ? "fallback" : "rxnorm" };
   } catch {
-    return { ingredients: fallbackLookup(name), source: "fallback" };
+    return { concepts: fallbackLookup(name), source: "fallback" };
   }
 }
 

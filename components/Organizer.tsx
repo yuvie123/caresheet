@@ -4,21 +4,14 @@
 "use client";
 import { useState } from "react";
 import type { PlanResult } from "@/lib/claude";
-import { doseNumber, scheduledMeds, SLOT_ORDER, UI_STRINGS } from "@/lib/render";
+import { activeOnDay, doseText, scheduledMeds, UI_STRINGS, usedSlots } from "@/lib/render";
 import type { Medication, Slot } from "@/lib/schema";
 import { Plate, SLOT_ICON, SLOT_LID } from "./Icons";
 
 const DAY = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"];
 
-/** True if the med is still being taken on this day, given "for N days" style durations. */
-function activeOnDay(med: Medication, dayIndex: number): boolean {
-  const m = med.duration_verbatim?.match(/(\d+)\s*day/i);
-  if (!m) return true;
-  return dayIndex < Number(m[1]);
-}
-
 function Pill({ med, onQuote }: { med: Medication; onQuote: (m: Medication) => void }) {
-  const dose = [doseNumber(med), med.dose_unit].filter(Boolean).join(" ");
+  const dose = doseText(med);
   return (
     <button
       type="button"
@@ -36,6 +29,7 @@ function Pill({ med, onQuote }: { med: Medication; onQuote: (m: Medication) => v
 
 export default function Organizer({ plan }: { plan: PlanResult }) {
   const meds = scheduledMeds(plan);
+  const slots = usedSlots(plan); // hide times of day with nothing in them
   const [quoted, setQuoted] = useState<Medication | null>(null);
   const [day, setDay] = useState(0); // phone view shows one day at a time
 
@@ -59,7 +53,7 @@ export default function Organizer({ plan }: { plan: PlanResult }) {
           ))}
         </div>
         <div className="space-y-3">
-          {SLOT_ORDER.map((slot) => {
+          {slots.map((slot) => {
             const Icon = SLOT_ICON[slot];
             const items = cell(slot, day);
             return (
@@ -85,7 +79,7 @@ export default function Organizer({ plan }: { plan: PlanResult }) {
           {DAY.map((d) => (
             <div key={d} className="pb-1 text-center text-sm font-bold text-muted">{d}</div>
           ))}
-          {SLOT_ORDER.map((slot) => {
+          {slots.map((slot) => {
             const Icon = SLOT_ICON[slot];
             return (
               <div key={slot} className="contents">

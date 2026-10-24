@@ -24,7 +24,7 @@
       "with_food": "not_stated",
       "status": "changed",
       "duration_verbatim": null,
-      "source_quote": "Metoprolol succinate 25 mg - take 1 tablet by mouth once daily.",
+      "source_quote": "Metoprolol succinate 25 mg",
       "source_doc": 0
     },
     {
@@ -41,17 +41,25 @@
       "with_food": "not_stated",
       "status": "unclear",
       "duration_verbatim": null,
-      "source_quote": "Metoprolol succinate ER 50 mg tablets",
+      "source_quote": "Metoprolol succinate ER 50 mg",
       "source_doc": 1
     }
   ],
   "ask_pharmacist": [
     {
       "kind": "mismatch",
-      "issue": "The discharge sheet says metoprolol succinate 25 mg once daily (dose lowered), but the pill bottle is metoprolol succinate ER 50 mg tablets. Which strength should be taken, and is the bottle the old dose?",
+      "issue": "The pill bottle says 50 mg once daily, but the discharge sheet says the dose was lowered to 25 mg once daily. Which dose should be taken, and should the bottle be replaced or the tablets split?",
       "quotes": [
-        "Metoprolol succinate 25 mg - take 1 tablet by mouth once daily.",
+        "Metoprolol succinate 25 mg - take 1 tablet by mouth once daily. Dose lowered.",
         "Metoprolol succinate ER 50 mg tablets"
+      ]
+    },
+    {
+      "kind": "duplicate",
+      "issue": "Metoprolol succinate 25 mg and Metoprolol succinate ER 50 mg all contain metoprolol (checked with NIH RxNorm). Should these be taken together, or is one replacing the other?",
+      "quotes": [
+        "Metoprolol succinate 25 mg",
+        "Metoprolol succinate ER 50 mg"
       ]
     }
   ],
@@ -72,16 +80,29 @@
       "with_food": "not_stated",
       "status": "changed",
       "duration_verbatim": null,
-      "source_quote": "Metoprolol succinate 25 mg - take 1 tablet by mouth once daily.",
+      "source_quote": "Metoprolol succinate 25 mg",
       "source_doc": 0
-    }
-  ],
-  "failures": [
+    },
     {
-      "medication": "Metoprolol succinate ER",
-      "reason": "the dose numbers do not appear in the quoted sentence"
+      "name": "Metoprolol succinate ER",
+      "strength": "50 mg",
+      "dose_amount": 1,
+      "dose_unit": "tablet",
+      "frequency_verbatim": "once daily",
+      "times_per_day": 1,
+      "as_needed": false,
+      "slots": [
+        "morning"
+      ],
+      "with_food": "not_stated",
+      "status": "unclear",
+      "duration_verbatim": null,
+      "source_quote": "Metoprolol succinate ER 50 mg",
+      "source_doc": 1
     }
   ],
-  "retried": true,
+  "failures": [],
+  "retried": false,
+  "first_failures": [],
   "model": "claude-sonnet-5-5"
 }

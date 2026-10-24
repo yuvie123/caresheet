@@ -18,7 +18,7 @@
       "with_food": "not_stated",
       "status": "stop",
       "duration_verbatim": null,
-      "source_quote": "STOP: Glipizide 5 mg - stop taking.",
+      "source_quote": "Glipizide 5 mg",
       "source_doc": 0
     },
     {
@@ -36,7 +36,7 @@
       "with_food": "with_food",
       "status": "continue",
       "duration_verbatim": null,
-      "source_quote": "CONTINUE: Metformin 1000 mg - take 1 tablet by mouth twice daily with meals.",
+      "source_quote": "Metformin 1000 mg",
       "source_doc": 0
     }
   ],
@@ -56,7 +56,7 @@
       "with_food": "not_stated",
       "status": "stop",
       "duration_verbatim": null,
-      "source_quote": "STOP: Glipizide 5 mg - stop taking.",
+      "source_quote": "Glipizide 5 mg",
       "source_doc": 0
     },
     {
@@ -74,11 +74,12 @@
       "with_food": "with_food",
       "status": "continue",
       "duration_verbatim": null,
-      "source_quote": "CONTINUE: Metformin 1000 mg - take 1 tablet by mouth twice daily with meals.",
+      "source_quote": "Metformin 1000 mg",
       "source_doc": 0
     }
   ],
   "failures": [],
-  "retried": true,
+  "retried": false,
+  "first_failures": [],
   "model": "claude-sonnet-5-5"
 }

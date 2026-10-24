@@ -54,9 +54,15 @@ body {
     size: letter;
     margin: 12mm;
   }
+  html {
+    font-size: 14px; /* everything is sized in rem, so the whole sheet scales down to fit one page */
+  }
   body {
     background: #fff;
-    font-size: 15px;
+  }
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
   }
   .no-print {
     display: none !important;

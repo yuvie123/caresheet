@@ -15,7 +15,7 @@
       "strength": "25 mg",
       "dose_amount": 1,
       "dose_unit": "tablet",
-      "frequency_verbatim": "twice daily",
+      "frequency_verbatim": "twice daily with food",
       "times_per_day": 2,
       "as_needed": false,
       "slots": [
@@ -77,7 +77,7 @@
       "with_food": "not_stated",
       "status": "changed",
       "duration_verbatim": null,
-      "source_quote": "Atorvastatin - dose increased. Now take 40 mg (1 tablet) by mouth once daily at bedtime.",
+      "source_quote": "Atorvastatin - dose increased. Now take 40 mg",
       "source_doc": 0
     },
     {
@@ -154,36 +154,43 @@
       "slots": [],
       "with_food": "not_stated",
       "status": "unclear",
-      "duration_verbatim": "while symptoms last",
-      "source_quote": "Acetaminophen 500 mg caplets\nDirections: adults take 2 caplets every 6 hours while symptoms last.",
+      "duration_verbatim": null,
+      "source_quote": "Extra Strength TYLENOL\nAcetaminophen 500 mg",
       "source_doc": 1
     }
   ],
   "ask_pharmacist": [
     {
-      "kind": "mismatch",
-      "issue": "The Tylenol bottle says to take 2 caplets every 6 hours, while the discharge sheet says 1 to 2 tablets every 6 hours as needed for pain. Which dose should be used? Also, is the Tylenol bottle the same medicine as the Acetaminophen on the discharge list, so it is not taken twice?",
+      "kind": "duplicate",
+      "issue": "The Tylenol bottle in the kitchen is the same drug (acetaminophen 500 mg) as the acetaminophen on the discharge list. Is it the same medicine, and should it be counted as one supply so the daily limit is not exceeded?",
       "quotes": [
-        "adults take 2 caplets every 6 hours while symptoms last",
-        "take 1 to 2 tablets by mouth every 6 hours as needed for pain"
+        "Acetaminophen 500 mg - take 1 to 2 tablets by mouth every 6 hours as needed for pain.",
+        "Acetaminophen 500 mg caplets"
       ]
     },
     {
-      "kind": "duplicate",
-      "issue": "Tylenol and Acetaminophen both appear and contain acetaminophen 500 mg. Please confirm they are the same medicine and should not be combined.",
+      "kind": "mismatch",
+      "issue": "The discharge sheet says 1 to 2 tablets every 6 hours as needed, but the bottle says take 2 caplets every 6 hours while symptoms last. Which directions should be followed?",
       "quotes": [
-        "Extra Strength TYLENOL",
-        "Acetaminophen 500 mg - take 1 to 2 tablets"
+        "take 1 to 2 tablets by mouth every 6 hours as needed for pain",
+        "adults take 2 caplets every 6 hours while symptoms last"
+      ]
+    },
+    {
+      "kind": "unclear",
+      "issue": "The atorvastatin entry says the dose increased to 40 mg but does not say what the previous dose was. Will the existing home tablets need to be changed or doubled up?",
+      "quotes": [
+        "Atorvastatin - dose increased. Now take 40 mg (1 tablet) by mouth once daily at bedtime."
       ]
     }
   ],
   "follow_ups": [
     {
-      "text": "See the heart doctor (Dr. Okafor) in 1 week. The clinic will call to book the visit.",
+      "text": "See the heart doctor, Dr. Okafor, in 1 week. The clinic will call to book the visit.",
       "source_quote": "See Dr. Okafor (cardiology) in 1 week. The clinic will call to book."
     },
     {
-      "text": "Get a blood test for kidney function and potassium in 5 days.",
+      "text": "Get a blood test to check kidney function and potassium in 5 days.",
       "source_quote": "Blood test for kidney function and potassium in 5 days."
     }
   ],
@@ -197,7 +204,7 @@
       "source_quote": "Black or bloody stools, or bleeding that will not stop"
     },
     {
-      "text": "Swelling in the legs or weight gain of more than 2 kg in 2 days",
+      "text": "Swelling in the legs, or weight gain of more than 2 kg in 2 days",
       "source_quote": "Swelling in the legs or weight gain of more than 2 kg in 2 days"
     },
     {
@@ -211,7 +218,7 @@
       "strength": "25 mg",
       "dose_amount": 1,
       "dose_unit": "tablet",
-      "frequency_verbatim": "twice daily",
+      "frequency_verbatim": "twice daily with food",
       "times_per_day": 2,
       "as_needed": false,
       "slots": [
@@ -273,7 +280,7 @@
       "with_food": "not_stated",
       "status": "changed",
       "duration_verbatim": null,
-      "source_quote": "Atorvastatin - dose increased. Now take 40 mg (1 tablet) by mouth once daily at bedtime.",
+      "source_quote": "Atorvastatin - dose increased. Now take 40 mg",
       "source_doc": 0
     },
     {
@@ -350,22 +357,13 @@
       "slots": [],
       "with_food": "not_stated",
       "status": "unclear",
-      "duration_verbatim": "while symptoms last",
-      "source_quote": "Acetaminophen 500 mg caplets\nDirections: adults take 2 caplets every 6 hours while symptoms last.",
+      "duration_verbatim": null,
+      "source_quote": "Extra Strength TYLENOL\nAcetaminophen 500 mg",
       "source_doc": 1
     }
   ],
   "failures": [],
-  "retried": true,
-  "first_failures": [
-    {
-      "medication": "Atorvastatin",
-      "reason": "the dose numbers do not appear in the quoted sentence"
-    },
-    {
-      "medication": "TYLENOL",
-      "reason": "the dose numbers do not appear in the quoted sentence"
-    }
-  ],
+  "retried": false,
+  "first_failures": [],
   "model": "claude-sonnet-5-5"
 }

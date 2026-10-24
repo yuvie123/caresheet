@@ -61,6 +61,19 @@ describe(`CareSheet evals (${MODEL})`, () => {
       ``,
     ].join("\n");
     writeFileSync(new URL("./results.md", import.meta.url), md);
+    // Only a full run updates the public summary shown on the website.
+    if (rows.length === CASES.length) {
+      const summary = {
+        model: MODEL,
+        date: new Date().toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" }),
+        cases: rows.length,
+        passed,
+        invented,
+        median_seconds: [...rows.map((r) => r.seconds)].sort((a, b) => a - b)[Math.floor(rows.length / 2)],
+        rows: rows.map((r) => ({ id: r.id, why: CASES.find((c) => c.id === r.id)!.why, pass: r.pass, notes: r.notes })),
+      };
+      writeFileSync(new URL("./summary.json", import.meta.url), JSON.stringify(summary, null, 2) + "\n");
+    }
     console.log("\n" + md);
   });
 });
