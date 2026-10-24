@@ -34,7 +34,7 @@
       "strength": "20 mg",
       "dose_amount": 1,
       "dose_unit": "capsule",
-      "frequency_verbatim": "once daily before breakfast",
+      "frequency_verbatim": "once daily",
       "times_per_day": 1,
       "as_needed": false,
       "slots": [
@@ -57,7 +57,7 @@
       "slots": [],
       "with_food": "not_stated",
       "status": "unclear",
-      "duration_verbatim": null,
+      "duration_verbatim": "while symptoms persist",
       "source_quote": "Advil Liqui-Gels 200 mg",
       "source_doc": 1
     }
@@ -65,7 +65,7 @@
   "ask_pharmacist": [
     {
       "kind": "duplicate",
-      "issue": "Advil Liqui-Gels is a brand of ibuprofen, which is also on the discharge sheet as Ibuprofen 400 mg. Is it safe to have both, and should the Advil bottle be used at all?",
+      "issue": "The bottle at home (Advil Liqui-Gels) is a brand of ibuprofen, which is also prescribed on the discharge sheet. Is it safe to take both, or should only one be used?",
       "quotes": [
         "Advil Liqui-Gels 200 mg",
         "NEW: Ibuprofen 400 mg - take 1 tablet by mouth every 8 hours with food for 5 days."
@@ -73,7 +73,7 @@
     },
     {
       "kind": "mismatch",
-      "issue": "The bottle says 2 capsules of 200 mg every 4 to 6 hours while symptoms persist, but the discharge sheet says 400 mg every 8 hours for 5 days. Which directions should be followed?",
+      "issue": "The bottle says 2 capsules of 200 mg every 4 to 6 hours, while the discharge sheet says 400 mg every 8 hours for 5 days. Which schedule should be followed?",
       "quotes": [
         "Take 2 capsules every 4 to 6 hours while symptoms persist.",
         "take 1 tablet by mouth every 8 hours with food for 5 days"
@@ -81,14 +81,7 @@
     },
     {
       "kind": "unclear",
-      "issue": "The Advil label gives an interval of 4 to 6 hours, so the number of doses per day and a daily schedule are not clear. Is there a maximum per day?",
-      "quotes": [
-        "every 4 to 6 hours while symptoms persist"
-      ]
-    },
-    {
-      "kind": "unclear",
-      "issue": "The Advil label does not say whether to take it with food, and it is not on the discharge sheet. Should it be taken with food?",
+      "issue": "The Advil bottle label is not on the discharge sheet, so its status is unknown. Should it be continued, stopped, or replaced by the prescribed ibuprofen?",
       "quotes": [
         "Advil Liqui-Gels 200 mg"
       ]
@@ -121,7 +114,7 @@
       "strength": "20 mg",
       "dose_amount": 1,
       "dose_unit": "capsule",
-      "frequency_verbatim": "once daily before breakfast",
+      "frequency_verbatim": "once daily",
       "times_per_day": 1,
       "as_needed": false,
       "slots": [
@@ -144,7 +137,7 @@
       "slots": [],
       "with_food": "not_stated",
       "status": "unclear",
-      "duration_verbatim": null,
+      "duration_verbatim": "while symptoms persist",
       "source_quote": "Advil Liqui-Gels 200 mg",
       "source_doc": 1
     }

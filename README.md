@@ -58,7 +58,7 @@ flowchart LR
 
 `pnpm eval` runs fictional discharge cases against the real API, each with a known right answer:
 
-**7 of 7 test cases fully correct, 0 invented medicines, median 8 seconds per sheet** (`claude-sonnet-5-5`, 2026-10-23).
+**7 of 7 test cases fully correct, 0 invented medicines, median 7 seconds per sheet** (`claude-sonnet-5-5`, 2026-10-24).
 
 | Case | Result |
 |---|---|

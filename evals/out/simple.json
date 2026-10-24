@@ -22,7 +22,7 @@
       "with_food": "not_stated",
       "status": "new",
       "duration_verbatim": "for 7 days",
-      "source_quote": "Amoxicillin 500 mg",
+      "source_quote": "NEW: Amoxicillin 500 mg - take 1 capsule by mouth three times daily for 7 days.",
       "source_doc": 0
     },
     {
@@ -39,7 +39,7 @@
       "with_food": "empty_stomach",
       "status": "continue",
       "duration_verbatim": null,
-      "source_quote": "Levothyroxine 50 mcg",
+      "source_quote": "CONTINUE: Levothyroxine 50 mcg - take 1 tablet by mouth once daily before breakfast on an empty stomach.",
       "source_doc": 0
     }
   ],
@@ -63,7 +63,7 @@
       "with_food": "not_stated",
       "status": "new",
       "duration_verbatim": "for 7 days",
-      "source_quote": "Amoxicillin 500 mg",
+      "source_quote": "NEW: Amoxicillin 500 mg - take 1 capsule by mouth three times daily for 7 days.",
       "source_doc": 0
     },
     {
@@ -80,7 +80,7 @@
       "with_food": "empty_stomach",
       "status": "continue",
       "duration_verbatim": null,
-      "source_quote": "Levothyroxine 50 mcg",
+      "source_quote": "CONTINUE: Levothyroxine 50 mcg - take 1 tablet by mouth once daily before breakfast on an empty stomach.",
       "source_doc": 0
     }
   ],

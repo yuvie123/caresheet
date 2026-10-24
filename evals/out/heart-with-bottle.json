@@ -162,7 +162,7 @@
   "ask_pharmacist": [
     {
       "kind": "mismatch",
-      "issue": "The Tylenol bottle says to take 2 caplets every 6 hours, while the discharge sheet says 1 to 2 tablets every 6 hours only as needed for pain. Which instruction should be followed, and how many tablets should be taken each time?",
+      "issue": "The Tylenol bottle says to take 2 caplets every 6 hours, but the discharge sheet says 1 to 2 tablets every 6 hours only as needed for pain. Which should be followed, and how many tablets is it safe to take?",
       "quotes": [
         "take 1 to 2 tablets by mouth every 6 hours as needed for pain",
         "adults take 2 caplets every 6 hours while symptoms last"
@@ -170,23 +170,23 @@
     },
     {
       "kind": "unclear",
-      "issue": "Acetaminophen is listed with a dose range (1 to 2 tablets). How should the family decide how many to give each time?",
+      "issue": "The acetaminophen dose is a range (1 to 2 tablets). Please confirm how to decide how many to take each time.",
       "quotes": [
         "take 1 to 2 tablets by mouth every 6 hours as needed for pain"
       ]
     },
     {
       "kind": "duplicate",
-      "issue": "Acetaminophen 500 mg and Acetaminophen 500 mg all contain acetaminophen (checked with NIH RxNorm). Should these be taken together, or is one replacing the other?",
+      "issue": "Acetaminophen appears on both the discharge sheet and the Tylenol bottle. Please confirm these are the same medicine so it is not taken twice.",
       "quotes": [
-        "Acetaminophen 500 mg - take 1 to 2 tablets by mouth every 6 hours as needed for pain.",
+        "Acetaminophen 500 mg - take 1 to 2 tablets",
         "Acetaminophen 500 mg caplets"
       ]
     }
   ],
   "follow_ups": [
     {
-      "text": "See the heart doctor (Dr. Okafor) in 1 week. The clinic will call to book the visit.",
+      "text": "See the heart doctor (Dr. Okafor) in 1 week. The clinic will call to book the appointment.",
       "source_quote": "See Dr. Okafor (cardiology) in 1 week. The clinic will call to book."
     },
     {
@@ -196,19 +196,19 @@
   ],
   "warning_signs": [
     {
-      "text": "Chest pain, or a heartbeat that feels very fast or irregular.",
+      "text": "Chest pain, or a heartbeat that feels very fast or irregular",
       "source_quote": "Chest pain, or a heartbeat that feels very fast or irregular"
     },
     {
-      "text": "Black or bloody stools, or bleeding that will not stop.",
+      "text": "Black or bloody stools, or bleeding that will not stop",
       "source_quote": "Black or bloody stools, or bleeding that will not stop"
     },
     {
-      "text": "Swelling in the legs or weight gain of more than 2 kg in 2 days.",
+      "text": "Swelling in the legs or weight gain of more than 2 kg in 2 days",
       "source_quote": "Swelling in the legs or weight gain of more than 2 kg in 2 days"
     },
     {
-      "text": "Feeling dizzy or faint.",
+      "text": "Feeling dizzy or faint",
       "source_quote": "Feeling dizzy or faint"
     }
   ],
