@@ -6,7 +6,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { introducesNewNumber } from "./digits";
 import { findDuplicateIngredients } from "./rxnorm";
-import { Plan } from "./schema";
+import { Plan, type PharmacistItem } from "./schema";
 import { verifyPlan, type VerifiedPlan } from "./verify";
 
 export const MODEL = process.env.CARESHEET_MODEL ?? "claude-sonnet-5-5";
@@ -74,6 +74,8 @@ export type PlanResult = VerifiedPlan & {
   retried: boolean;
   /** What failed the checks on the first attempt (before the retry), for transparency and evals. */
   first_failures: VerifiedPlan["failures"];
+  /** "partial" when some medicines couldn't be checked for shared ingredients. */
+  ingredient_check?: "complete" | "partial";
   model: string;
 };
 
@@ -99,7 +101,7 @@ export async function extractPlan(docs: InputDoc[], onProgress: (p: Progress) =>
   onProgress("checking_ingredients");
   // Check every medication still being taken, including ones that failed verification:
   // an unverified pill bottle is exactly the one most likely to be a hidden duplicate.
-  const duplicates = await findDuplicateIngredients(plan.medications);
+  const { findings: duplicates, unchecked } = await findDuplicateIngredients(plan.medications);
 
   // Keep the pharmacist list short: skip a code-generated card when Claude already raised a
   // duplicate about the same ingredient, and skip an "unverified" card for a medicine that
@@ -125,10 +127,29 @@ export async function extractPlan(docs: InputDoc[], onProgress: (p: Progress) =>
     .map((f) => verified.ask_pharmacist.find((q) => q.kind === "unverified" && q.issue.includes(`"${f.medication}"`))!)
     .filter(Boolean);
 
+  // Say so when some medicines couldn't be checked for shared ingredients, instead of implying "no duplicates".
+  const ingredientItems: PharmacistItem[] = [];
+  const offline = unchecked.filter((u) => u.reason === "offline").map((u) => u.name);
+  const unknown = unchecked.filter((u) => u.reason === "unidentified").map((u) => u.name);
+  if (offline.length)
+    ingredientItems.push({
+      kind: "unverified",
+      issue: `CareSheet couldn't reach the drug database to check ${offline.join(", ")} for shared ingredients. Please ask whether any of these contain the same drug as another medicine.`,
+      quotes: [],
+    });
+  if (unknown.length)
+    ingredientItems.push({
+      kind: "unverified",
+      issue: `The drug database doesn't recognise the name ${unknown.map((n) => `"${n}"`).join(", ")}. Please check the spelling against the bottle and whether it duplicates another medicine.`,
+      quotes: [],
+    });
+  const ingredient_check: "complete" | "partial" = unchecked.length ? "partial" : "complete";
+
   onProgress("done");
   return {
     ...verified,
-    ask_pharmacist: [...claudeItems, ...freshDuplicates.map((d) => d.item), ...unverified],
+    ask_pharmacist: [...claudeItems, ...freshDuplicates.map((d) => d.item), ...unverified, ...ingredientItems],
+    ingredient_check,
     retried,
     first_failures: firstFailures,
     model: MODEL,

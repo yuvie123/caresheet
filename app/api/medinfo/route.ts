@@ -38,6 +38,7 @@ export async function GET(req: Request) {
 
   const { concepts } = await ingredientConcepts(name);
   const results: MedInfo[] = [];
+  let unavailable = false;
   for (const c of (concepts ?? []).filter((c) => c.rxcui).slice(0, 2)) {
     try {
       const res = await fetch(
@@ -45,6 +46,7 @@ export async function GET(req: Request) {
           `&knowledgeResponseType=application/json&informationRecipient.languageCode.c=${lang}`,
         { signal: AbortSignal.timeout(6000) },
       );
+      if (!res.ok) throw new Error(`MedlinePlus ${res.status}`);
       const data = (await res.json()) as Feed;
       const first = data.feed?.entry?.[0];
       const href = first?.link?.[0]?.href;
@@ -56,10 +58,12 @@ export async function GET(req: Request) {
           summary: plain(first.summary?._value ?? ""),
         });
       }
-    } catch {
-      // MedlinePlus unreachable: show nothing rather than guess.
+    } catch (err) {
+      // MedlinePlus unreachable: say so (and don't cache), rather than claiming there's no page.
+      console.error("medlineplus failed:", err instanceof Error ? err.message : "unknown");
+      unavailable = true;
     }
   }
-  cache.set(key, results);
-  return Response.json({ results });
+  if (!unavailable) cache.set(key, results);
+  return Response.json({ results, unavailable });
 }

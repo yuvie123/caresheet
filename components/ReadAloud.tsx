@@ -42,7 +42,7 @@ export default function ReadAloud({
   const target = VOICE_LANG[lang] ?? "en";
   const voice = pickVoice(voices, target) ?? pickVoice(voices, "en");
 
-  if (voices.length === 0) return null; // no speech support (or voices not loaded yet)
+  if (voices.length === 0) return null; // no speech voices on this device (or not loaded yet)
   const native = voice?.lang.toLowerCase().startsWith(target) && target !== "en";
   const t = (key: string, en: string) => (native ? translations?.[key] ?? en : en);
 

@@ -2,9 +2,22 @@
 // Receives the discharge text and/or photos/PDFs as form data, runs the pipeline in lib/claude.ts,
 // and streams progress lines back so the screen can show what's happening.
 // Each line is one JSON object: {"stage":"reading"} ... then {"result":{...}} or {"error":"..."}.
+import Anthropic from "@anthropic-ai/sdk";
 import { extractPlan, type InputDoc } from "@/lib/claude";
 import { allow, clientIp } from "@/lib/ratelimit";
 
+/** Plain-language messages for API problems; logs status codes only, never document contents. */
+function friendlyError(err: unknown): string {
+  if (err instanceof Anthropic.APIError) {
+    console.error("claude api error:", err.status, err.requestID ?? "");
+    if (err.status === 429 || err.status === 529) return "CareSheet is busy right now. Please try again in a minute.";
+    if (err.status === 413) return "Those files are too large. Try fewer or smaller photos.";
+    if (err.status && err.status >= 500) return "The reading service had a problem. Please try again.";
+    return "The papers couldn't be read. Please try again, or paste the text instead of a photo.";
+  }
+  console.error("plan failed:", err instanceof Error ? err.message.slice(0, 120) : "unknown");
+  return err instanceof Error && !/^\d{3}\b/.test(err.message) ? err.message : "Something went wrong. Please try again.";
+}
 export const maxDuration = 120;
 
 const MAX_TEXT = 30_000;
@@ -50,9 +63,7 @@ export async function POST(req: Request) {
         const result = await extractPlan(docs, (stage) => send({ stage }));
         send({ result });
       } catch (err) {
-        // Never log document contents; only the error type.
-        console.error("plan failed:", err instanceof Error ? err.name : "unknown");
-        send({ error: err instanceof Error ? err.message : "Something went wrong. Please try again." });
+        send({ error: friendlyError(err) });
       } finally {
         controller.close();
       }

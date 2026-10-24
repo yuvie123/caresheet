@@ -39,7 +39,10 @@ const FALLBACK: Record<string, string> = {
 };
 
 export type Ingredient = { name: string; rxcui: string | null };
-const cache = new Map<string, Ingredient[] | null>();
+/** rxnorm = found in RxNorm; fallback = offline list; unidentified = RxNorm doesn't know the name; offline = RxNorm unreachable and not in the list. */
+export type LookupSource = "rxnorm" | "fallback" | "unidentified" | "offline";
+type Lookup = { concepts: Ingredient[] | null; source: LookupSource };
+const cache = new Map<string, Lookup>(); // only successful RxNorm answers are cached
 
 async function getJson(url: string): Promise<unknown> {
   const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
@@ -56,19 +59,17 @@ function fallbackLookup(name: string): Ingredient[] | null {
   return hits.size ? [...hits].map((n) => ({ name: n, rxcui: null })) : null;
 }
 
-/**
- * Active ingredients for a medication name, lowercase. null means "could not identify".
- * `source` says whether the answer came from RxNorm or the offline fallback list.
- */
-export async function ingredientsFor(name: string): Promise<{ ingredients: string[] | null; source: "rxnorm" | "fallback" }> {
+/** Active ingredients for a medication name, lowercase. null means "could not identify". */
+export async function ingredientsFor(name: string): Promise<{ ingredients: string[] | null; source: LookupSource }> {
   const r = await ingredientConcepts(name);
   return { ingredients: r.concepts ? r.concepts.map((c) => c.name) : null, source: r.source };
 }
 
 /** Same lookup, but keeps each ingredient's RxNorm ID (used for MedlinePlus links). */
-export async function ingredientConcepts(name: string): Promise<{ concepts: Ingredient[] | null; source: "rxnorm" | "fallback" }> {
+export async function ingredientConcepts(name: string): Promise<Lookup> {
   const key = name.toLowerCase().trim();
-  if (cache.has(key)) return { concepts: cache.get(key)!, source: "rxnorm" };
+  const hit = cache.get(key);
+  if (hit) return hit;
   try {
     const approx = (await getJson(
       `${BASE}/approximateTerm.json?term=${encodeURIComponent(name)}&maxEntries=5`,
@@ -95,16 +96,18 @@ export async function ingredientConcepts(name: string): Promise<{ concepts: Ingr
         }
       }
       if (concepts.length) {
-        cache.set(key, concepts);
-        return { concepts, source: "rxnorm" };
+        const result: Lookup = { concepts, source: "rxnorm" };
+        cache.set(key, result);
+        return result;
       }
     }
     // RxNorm couldn't identify it; the offline list may still know the brand.
     const fb = fallbackLookup(name);
-    cache.set(key, fb);
-    return { concepts: fb, source: fb ? "fallback" : "rxnorm" };
-  } catch {
-    return { concepts: fallbackLookup(name), source: "fallback" };
+    return fb ? { concepts: fb, source: "fallback" } : { concepts: null, source: "unidentified" };
+  } catch (err) {
+    console.error("rxnav lookup failed:", err instanceof Error ? err.message : "unknown");
+    const fb = fallbackLookup(name);
+    return fb ? { concepts: fb, source: "fallback" } : { concepts: null, source: "offline" };
   }
 }
 
@@ -114,7 +117,13 @@ export async function ingredientConcepts(name: string): Promise<{ concepts: Ingr
  */
 export type DuplicateFinding = { ingredient: string; medNames: string[]; item: PharmacistItem };
 
-export async function findDuplicateIngredients(meds: Medication[]): Promise<DuplicateFinding[]> {
+export type DuplicateCheck = {
+  findings: DuplicateFinding[];
+  /** Medicines whose ingredients could not be checked (unknown name or RxNorm unreachable). */
+  unchecked: { name: string; reason: "unidentified" | "offline" }[];
+};
+
+export async function findDuplicateIngredients(meds: Medication[]): Promise<DuplicateCheck> {
   const active = meds.filter((m) => m.status !== "stop");
   const lookups = await Promise.all(active.map(async (m) => ({ med: m, ...(await ingredientsFor(m.name)) })));
 
@@ -142,5 +151,8 @@ export async function findDuplicateIngredients(meds: Medication[]): Promise<Dupl
       },
     });
   }
-  return findings;
+  const unchecked = lookups
+    .filter((l) => l.source === "unidentified" || l.source === "offline")
+    .map((l) => ({ name: l.med.name, reason: l.source as "unidentified" | "offline" }));
+  return { findings, unchecked };
 }

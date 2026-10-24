@@ -1,9 +1,9 @@
 // Runs every eval case against the real Claude API and writes evals/results.md.
 // Run with: pnpm eval   (needs ANTHROPIC_API_KEY in .env.local)
 // This costs a little money per run (a few cents per case), so it is not part of `pnpm test`.
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { afterAll, describe, expect, it } from "vitest";
-import { extractPlan, MODEL, type PlanResult } from "../lib/claude";
+import { extractPlan, MODEL, type InputDoc, type PlanResult } from "../lib/claude";
 import { CASES, type EvalCase } from "./cases";
 
 type Row = { id: string; pass: boolean; notes: string[]; invented: number; seconds: number };
@@ -36,7 +36,16 @@ describe(`CareSheet evals (${MODEL})`, () => {
   for (const c of CASES) {
     it(c.id, async () => {
       const t0 = Date.now();
-      const plan = await extractPlan(c.texts.map((text, i) => ({ kind: "text", text, label: `doc ${i}` })));
+      const docs: InputDoc[] = [
+        ...c.texts.map((text, i): InputDoc => ({ kind: "text", text, label: `doc ${i}` })),
+        ...(c.images ?? []).map((path): InputDoc => ({
+          kind: "image",
+          mediaType: "image/jpeg",
+          base64: readFileSync(new URL(`../public/${path}`, import.meta.url)).toString("base64"),
+          label: path.split("/").pop()!,
+        })),
+      ];
+      const plan = await extractPlan(docs);
       mkdirSync(new URL("./out/", import.meta.url), { recursive: true });
       writeFileSync(new URL(`./out/${c.id}.json`, import.meta.url), JSON.stringify(plan, null, 2));
       const { notes, invented } = grade(c, plan);

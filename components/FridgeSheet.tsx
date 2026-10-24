@@ -87,10 +87,12 @@ export default function FridgeSheet({
   plan,
   translations,
   languageName,
+  isExample = false,
 }: {
   plan: PlanResult;
   translations: T | null;
   languageName: string | null;
+  isExample?: boolean;
 }) {
   const all = plan.verified_medications;
   const idx = (m: Medication) => all.indexOf(m);
@@ -112,6 +114,11 @@ export default function FridgeSheet({
           </p>
         </header>
 
+        {isExample ? (
+          <p className="mt-2 rounded border-2 border-dashed border-ink px-3 py-1 text-sm font-bold">
+            EXAMPLE ONLY: fictional patient. Not anyone&apos;s real medicine plan.
+          </p>
+        ) : null}
         {stopped.length ? (
           <section className="mt-3 rounded-lg border-2 border-stop bg-stop-wash px-3 py-2 text-stop">
             <h3 className="flex items-center gap-2 font-bold">

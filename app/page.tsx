@@ -5,6 +5,7 @@
 // 3. See the pill organizer, the med list, pharmacist questions, and print the fridge sheet.
 import { useEffect, useRef, useState } from "react";
 import AskPharmacist from "@/components/AskPharmacist";
+import FileThumbs from "@/components/FileThumbs";
 import FridgeSheet from "@/components/FridgeSheet";
 import HowItWorks from "@/components/HowItWorks";
 import MedList from "@/components/MedList";
@@ -36,23 +37,60 @@ type Status = "idle" | "working" | "done" | "error";
 export default function Home() {
   const [texts, setTexts] = useState<string[]>([""]);
   const [files, setFiles] = useState<File[]>([]);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [lang, setLang] = useState<string>("pa");
   const [status, setStatus] = useState<Status>("idle");
   const [stage, setStage] = useState<Progress | null>(null);
   const [seen, setSeen] = useState<Progress[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<PlanResult | null>(null);
+  const [isExample, setIsExample] = useState(false);
   const [translations, setTranslations] = useState<Record<string, string | null> | null>(null);
   const [translating, setTranslating] = useState(false);
+  const [translateError, setTranslateError] = useState(false);
+  const translateRequest = useRef(0); // ignore replies for a language that's no longer selected
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const langName = LANGS.find((l) => l.code === lang)?.name.split(" ").slice(1).join(" ") || null;
+  // Language label only when a translation is actually showing.
+  const shownLangName = translations && lang ? langName : null;
+  const englishOnlyLines = translations ? Object.values(translations).filter((v) => v === null).length : 0;
 
   async function onFiles(list: FileList | null) {
     if (!list) return;
+    setFileError(null);
     const picked = Array.from(list).slice(0, 4 - files.length);
-    const ready = await Promise.all(picked.map((f) => compressImage(f)));
+    const ready: File[] = [];
+    const failed: string[] = [];
+    for (const f of picked) {
+      try {
+        ready.push(await compressImage(f));
+      } catch {
+        failed.push(f.name);
+      }
+    }
+    if (failed.length)
+      setFileError(`${failed.join(", ")} couldn't be opened. Please use a JPG or PNG photo (or a screenshot) or a PDF.`);
     setFiles((prev) => [...prev, ...ready].slice(0, 4));
+  }
+
+  // Loads two fictional "phone photos" (discharge sheet + Tylenol bottle) as if taken with the camera.
+  async function loadPhotoSample() {
+    const names = ["discharge-photo.jpg", "bottle-photo.jpg"];
+    try {
+      const photos = await Promise.all(
+        names.map(async (n) => {
+          const res = await fetch(`/samples/${n}`);
+          if (!res.ok) throw new Error(n);
+          return new File([await res.blob()], n, { type: "image/jpeg" });
+        }),
+      );
+      setTexts([""]);
+      setFiles(photos);
+      setFileError(null);
+    } catch {
+      setFileError("The sample photos couldn't be loaded. Check the connection and try again.");
+    }
   }
 
   function loadSample(key: keyof typeof SAMPLES) {
@@ -63,16 +101,26 @@ export default function Home() {
 
   // A real result saved from the live site (fictional patient). Shown instantly, no API call:
   // useful for anyone browsing, and the backup if Wi-Fi or credits fail during a demo.
+  // It is clearly labelled as an example everywhere, including the printout.
   async function showSavedExample() {
-    setError(null);
-    const res = await fetch("/demo/heart.json");
-    const data = (await res.json()) as { plan: PlanResult; translations_pa: Record<string, string | null> };
-    setTexts([SAMPLES.heart.text, SAMPLES.heart.bottle ?? ""]);
-    setLang("pa");
-    setPlan(data.plan);
-    setTranslations(data.translations_pa);
-    setStatus("done");
-    requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }));
+    try {
+      const res = await fetch("/demo/heart.json");
+      if (!res.ok) throw new Error();
+      const data = (await res.json()) as { plan: PlanResult; translations_pa: Record<string, string | null> };
+      translateRequest.current++; // cancel any translation in flight
+      setError(null);
+      setLang("pa");
+      setPlan(data.plan);
+      setIsExample(true);
+      setTranslations(data.translations_pa);
+      setTranslateError(false);
+      setTranslating(false);
+      setStatus("done");
+      requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }));
+    } catch {
+      setError("The saved example couldn't be loaded. Check the connection and try again.");
+      setStatus("error");
+    }
   }
 
   // caresheet.vercel.app/?example opens the saved example straight away (handy link for judges).
@@ -83,8 +131,13 @@ export default function Home() {
   }, []);
 
   async function translate(p: PlanResult, code: string) {
+    const id = ++translateRequest.current;
     setTranslations(null);
-    if (!code) return;
+    setTranslateError(false);
+    if (!code) {
+      setTranslating(false);
+      return;
+    }
     setTranslating(true);
     try {
       const res = await fetch("/api/translate", {
@@ -92,10 +145,14 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ language: code, strings: translatableStrings(p) }),
       });
-      const data = await res.json();
-      if (res.ok) setTranslations(data.translations);
+      const data = await res.json().catch(() => null);
+      if (id !== translateRequest.current) return; // a newer language was chosen
+      if (res.ok && data?.translations) setTranslations(data.translations);
+      else setTranslateError(true);
+    } catch {
+      if (id === translateRequest.current) setTranslateError(true);
     } finally {
-      setTranslating(false);
+      if (id === translateRequest.current) setTranslating(false);
     }
   }
 
@@ -103,7 +160,9 @@ export default function Home() {
     setStatus("working");
     setError(null);
     setPlan(null);
+    setIsExample(false);
     setTranslations(null);
+    setTranslateError(false);
     setSeen([]);
     setStage(null);
 
@@ -120,6 +179,29 @@ export default function Home() {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buf = "";
+      let gotResult = false;
+      const handle = (line: string) => {
+        if (!line.trim()) return;
+        let msg: { stage?: Progress; error?: string; result?: PlanResult };
+        try {
+          msg = JSON.parse(line);
+        } catch {
+          throw new Error("The answer from the server was cut off. Please try again.");
+        }
+        if (msg.stage) {
+          const s = msg.stage;
+          setStage(s);
+          setSeen((prev) => (prev.includes(s) ? prev : [...prev, s]));
+        }
+        if (msg.error) throw new Error(msg.error);
+        if (msg.result) {
+          gotResult = true;
+          setPlan(msg.result);
+          setStatus("done");
+          requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }));
+          void translate(msg.result, lang);
+        }
+      };
       for (;;) {
         const { value, done } = await reader.read();
         if (done) break;
@@ -128,21 +210,11 @@ export default function Home() {
         while ((nl = buf.indexOf("\n")) >= 0) {
           const line = buf.slice(0, nl);
           buf = buf.slice(nl + 1);
-          if (!line.trim()) continue;
-          const msg = JSON.parse(line);
-          if (msg.stage) {
-            setStage(msg.stage);
-            setSeen((s) => (s.includes(msg.stage) ? s : [...s, msg.stage]));
-          }
-          if (msg.error) throw new Error(msg.error);
-          if (msg.result) {
-            setPlan(msg.result);
-            setStatus("done");
-            requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }));
-            void translate(msg.result, lang);
-          }
+          handle(line);
         }
       }
+      handle(buf + decoder.decode());
+      if (!gotResult) throw new Error("The connection ended before the plan was finished. Please try again.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
       setStatus("error");
@@ -196,16 +268,8 @@ export default function Home() {
               <input type="file" accept="image/*,application/pdf" capture="environment" multiple className="sr-only"
                 onChange={(e) => void onFiles(e.target.files)} />
             </label>
-            {files.length ? (
-              <ul className="mt-2 flex flex-wrap gap-2">
-                {files.map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 rounded-full bg-wash px-3 py-1 text-sm">
-                    {f.name}
-                    <button aria-label={`Remove ${f.name}`} onClick={() => setFiles((p) => p.filter((_, j) => j !== i))} className="font-bold">×</button>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+            <FileThumbs files={files} onRemove={(i) => setFiles((p) => p.filter((_, j) => j !== i))} />
+            {fileError ? <p role="alert" className="mt-2 text-stop">{fileError}</p> : null}
           </div>
 
           <label className="mt-5 block max-w-sm">
@@ -227,6 +291,9 @@ export default function Home() {
                 Try: {SAMPLES[k].label}
               </button>
             ))}
+            <button type="button" onClick={() => void loadPhotoSample()} className="text-action underline">
+              Try: Photos of the papers
+            </button>
             <button type="button" onClick={() => void showSavedExample()} className="text-action underline">
               See a finished example
             </button>
@@ -262,6 +329,11 @@ export default function Home() {
       {plan ? (
         <div ref={resultsRef} className="mt-10 space-y-10 print:mt-0 print:space-y-0">
           <div className="no-print space-y-10">
+            {isExample ? (
+              <p role="status" className="rounded-xl border-2 border-ask bg-ask-wash p-4 font-bold">
+                Example only: this is a fictional patient, not your papers. Add your own papers above to make your plan.
+              </p>
+            ) : null}
             <section aria-labelledby="week">
               <h2 id="week" className="text-3xl font-bold">This week</h2>
               <p className="mb-4 text-muted">
@@ -289,8 +361,26 @@ export default function Home() {
                 <div>
                   <h2 id="fridge" className="text-3xl font-bold">Fridge sheet</h2>
                   <p className="text-muted">
-                    {translating ? `Translating into ${langName}…` : langName ? `English and ${langName}. Numbers are never translated, only words.` : "English."}
+                    {translating
+                      ? `Translating into ${langName}…`
+                      : shownLangName
+                        ? `English and ${shownLangName}. Numbers are never translated, only words.`
+                        : "English."}
                   </p>
+                  {translateError ? (
+                    <p role="alert" className="mt-1 text-stop">
+                      The translation didn&apos;t work, so this sheet is English only.{" "}
+                      <button type="button" className="text-action underline" onClick={() => void translate(plan, lang)}>
+                        Try again
+                      </button>
+                    </p>
+                  ) : null}
+                  {englishOnlyLines > 0 ? (
+                    <p className="mt-1 text-ask">
+                      {englishOnlyLines} line{englishOnlyLines > 1 ? "s were" : " was"} kept in English because the translation
+                      changed a number. Please have someone read {englishOnlyLines > 1 ? "them" : "it"} aloud.
+                    </p>
+                  ) : null}
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-3">
@@ -310,7 +400,7 @@ export default function Home() {
                 Reminders go into your own phone calendar at 8:00, 12:30, 18:00 and 21:30 for the next week. You can change the times there.
               </p>
               <div className="mt-4 rounded-2xl bg-wash p-2 shadow-inner sm:p-4">
-                <FridgeSheet plan={plan} translations={translations} languageName={langName} />
+                <FridgeSheet plan={plan} translations={translations} languageName={shownLangName} isExample={isExample} />
               </div>
             </section>
 
@@ -326,7 +416,7 @@ export default function Home() {
           </div>
 
           <div className="print-only">
-            <FridgeSheet plan={plan} translations={translations} languageName={langName} />
+            <FridgeSheet plan={plan} translations={translations} languageName={shownLangName} isExample={isExample} />
           </div>
         </div>
       ) : null}

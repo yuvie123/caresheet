@@ -35,6 +35,11 @@ describe("rxnorm", () => {
       med("Aspirin", "81 mg", "stop"),
       med("Metoprolol tartrate", "25 mg"),
     ]);
-    expect(found.map((f) => f.ingredient)).toEqual(["acetaminophen"]);
+    expect(found.findings.map((f) => f.ingredient)).toEqual(["acetaminophen"]);
+    expect(found.unchecked).toEqual([]);
+  }, 30_000);
+  it("reports a name RxNorm doesn't know instead of silently skipping it", async () => {
+    const found = await findDuplicateIngredients([med("Zzyxolinamide", "10 mg")]);
+    expect(found.unchecked).toEqual([{ name: "Zzyxolinamide", reason: "unidentified" }]);
   }, 30_000);
 });

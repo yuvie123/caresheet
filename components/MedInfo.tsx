@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { MedInfo as Info } from "@/app/api/medinfo/route";
 
 export default function MedInfo({ name, lang }: { name: string; lang: "en" | "es" }) {
-  const [state, setState] = useState<"idle" | "loading" | "done">("idle");
+  const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [results, setResults] = useState<Info[]>([]);
 
   async function load() {
@@ -12,9 +12,11 @@ export default function MedInfo({ name, lang }: { name: string; lang: "en" | "es
     try {
       const res = await fetch(`/api/medinfo?name=${encodeURIComponent(name)}&lang=${lang}`);
       const data = await res.json();
+      if (!res.ok || (data.unavailable && !data.results?.length)) throw new Error();
       setResults(data.results ?? []);
-    } finally {
       setState("done");
+    } catch {
+      setState("error");
     }
   }
 
@@ -25,6 +27,15 @@ export default function MedInfo({ name, lang }: { name: string; lang: "en" | "es
       </button>
     );
   }
+  if (state === "error")
+    return (
+      <p className="text-sm text-muted">
+        Couldn&apos;t reach MedlinePlus.{" "}
+        <button type="button" onClick={() => void load()} className="text-action underline">
+          Try again
+        </button>
+      </p>
+    );
   if (state === "loading") return <p className="text-sm text-muted">Looking it up on MedlinePlus…</p>;
   if (!results.length) return <p className="text-sm text-muted">MedlinePlus has no page for this name. Ask the pharmacist.</p>;
   return (

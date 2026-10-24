@@ -7,6 +7,7 @@ export type EvalCase = {
   id: string;
   why: string;
   texts: string[];
+  images?: string[]; // paths under public/, sent as photos (tests the vision path)
   expect: {
     scheduled?: { name: string; strength?: string }[]; // must be verified and not stopped
     stopped?: string[]; // must be verified with status "stop"
@@ -17,6 +18,23 @@ export type EvalCase = {
 };
 
 export const CASES: EvalCase[] = [
+  {
+    id: "photos-heart-and-bottle",
+    why: "Phone photos (tilted, folded sheet + pill bottle) instead of typed text",
+    texts: [],
+    images: ["samples/discharge-photo.jpg", "samples/bottle-photo.jpg"],
+    expect: {
+      scheduled: [
+        { name: "metoprolol", strength: "25" },
+        { name: "apixaban", strength: "5" },
+        { name: "furosemide", strength: "20" },
+        { name: "atorvastatin", strength: "40" },
+        { name: "metformin", strength: "500" },
+      ],
+      stopped: ["amlodipine", "aspirin"],
+      flags: ["duplicate"],
+    },
+  },
   {
     id: "heart-with-bottle",
     why: "Full reconciliation sheet plus a Tylenol bottle that duplicates acetaminophen",
