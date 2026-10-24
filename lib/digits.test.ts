@@ -18,3 +18,17 @@ describe("extractNumbers: separators", () => {
     expect(extractNumbers("12.5 mg")).toEqual(["12.5"]);
   });
 });
+
+describe("extractNumbers: fractions", () => {
+  it("turns common fractions into decimals", () => {
+    expect(extractNumbers("take 1/2 tablet")).toEqual(["0.5"]);
+    expect(extractNumbers("1/4 tablet")).toEqual(["0.25"]);
+    expect(extractNumbers("3/4 tsp")).toEqual(["0.75"]);
+    expect(extractNumbers("take 1 1/2 tablets")).toEqual(["1.5"]);
+    expect(extractNumbers("¼ tablet and 1¾ tsp")).toEqual(["0.25", "1.75"]);
+  });
+  it("leaves dates and other slashes alone", () => {
+    expect(extractNumbers("10/12/2026")).toEqual(["10", "12", "2026"]);
+    expect(extractNumbers("120/80 mmHg")).toEqual(["120", "80"]);
+  });
+});

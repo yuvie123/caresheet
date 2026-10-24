@@ -124,8 +124,9 @@ export type DuplicateCheck = {
 };
 
 export async function findDuplicateIngredients(meds: Medication[]): Promise<DuplicateCheck> {
-  const active = meds.filter((m) => m.status !== "stop");
-  const lookups = await Promise.all(active.map(async (m) => ({ med: m, ...(await ingredientsFor(m.name)) })));
+  // Look up everything, including stopped medicines: a stopped drug turning up in a bottle at home is
+  // exactly the mistake worth catching.
+  const lookups = await Promise.all(meds.map(async (m) => ({ med: m, ...(await ingredientsFor(m.name)) })));
 
   const byIngredient = new Map<string, typeof lookups>();
   for (const l of lookups) {
@@ -136,23 +137,39 @@ export async function findDuplicateIngredients(meds: Medication[]): Promise<Dupl
     }
   }
 
+  const label = (l: (typeof lookups)[number]) => `${l.med.name}${l.med.strength ? ` ${l.med.strength}` : ""}`;
   const findings: DuplicateFinding[] = [];
   for (const [ingredient, list] of byIngredient) {
-    if (list.length < 2) continue;
-    const names = list.map((l) => `${l.med.name}${l.med.strength ? ` ${l.med.strength}` : ""}`);
+    const active = list.filter((l) => l.med.status !== "stop");
+    const stopped = list.filter((l) => l.med.status === "stop");
     const viaRx = list.every((l) => l.source === "rxnorm");
-    findings.push({
-      ingredient,
-      medNames: list.map((l) => l.med.name),
-      item: {
-        kind: "duplicate",
-        issue: `${names.join(" and ")} all contain ${ingredient}${viaRx ? " (checked with NIH RxNorm)" : ""}. Should these be taken together, or is one replacing the other?`,
-        quotes: list.map((l) => l.med.source_quote),
-      },
-    });
+    const via = viaRx ? " (checked with NIH RxNorm)" : "";
+    if (active.length >= 2) {
+      findings.push({
+        ingredient,
+        medNames: active.map((l) => l.med.name),
+        item: {
+          kind: "duplicate",
+          issue: `${active.map(label).join(" and ")} all contain ${ingredient}${via}. Should these be taken together, or is one replacing the other?`,
+          quotes: active.map((l) => l.med.source_quote),
+        },
+      });
+    }
+    if (stopped.length >= 1 && active.length >= 1) {
+      findings.push({
+        ingredient,
+        medNames: list.map((l) => l.med.name),
+        item: {
+          kind: "conflict",
+          issue: `${active.map(label).join(" and ")} contains ${ingredient}${via}, which the papers say to STOP (${stopped.map(label).join(", ")}). Do not use it until the pharmacist confirms.`,
+          quotes: [...stopped, ...active].map((l) => l.med.source_quote),
+        },
+      });
+    }
   }
+
   const unchecked = lookups
-    .filter((l) => l.source === "unidentified" || l.source === "offline")
+    .filter((l) => l.med.status !== "stop" && (l.source === "unidentified" || l.source === "offline"))
     .map((l) => ({ name: l.med.name, reason: l.source as "unidentified" | "offline" }));
   return { findings, unchecked };
 }

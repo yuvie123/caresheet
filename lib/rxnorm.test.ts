@@ -42,4 +42,23 @@ describe("rxnorm", () => {
     const found = await findDuplicateIngredients([med("Zzyxolinamide", "10 mg")]);
     expect(found.unchecked).toEqual([{ name: "Zzyxolinamide", reason: "unidentified" }]);
   }, 30_000);
+
+  it("warns when a bottle at home contains an ingredient the papers say to STOP (Norvasc = amlodipine)", async () => {
+    const found = await findDuplicateIngredients([
+      med("Amlodipine", "5 mg", "stop"),
+      med("Norvasc", "5 mg", "continue"),
+    ]);
+    expect(found.findings).toHaveLength(1);
+    expect(found.findings[0].item.kind).toBe("conflict");
+    expect(found.findings[0].item.issue).toMatch(/STOP/);
+    expect(found.findings[0].medNames).toEqual(expect.arrayContaining(["Amlodipine", "Norvasc"]));
+  }, 30_000);
+  it("says nothing when only stopped medicines share an ingredient", async () => {
+    const found = await findDuplicateIngredients([med("Amlodipine", "5 mg", "stop"), med("Norvasc", "5 mg", "stop")]);
+    expect(found.findings).toEqual([]);
+  }, 30_000);
+  it("does not count stopped medicines as unchecked", async () => {
+    const found = await findDuplicateIngredients([med("Zzyxolinamide", "10 mg", "stop")]);
+    expect(found.unchecked).toEqual([]);
+  }, 30_000);
 });

@@ -22,10 +22,24 @@ function toAsciiDigit(ch: string): string {
 
 /** Replace every digit from a supported script with its ASCII digit, and ½ with .5. */
 export function normalizeDigits(text: string): string {
-  return text
-    .replace(/\p{Nd}/gu, toAsciiDigit)
-    .replace(/(\d)\s*½/g, "$1.5") // "1½" -> "1.5"
-    .replace(/½/g, "0.5"); // "½" -> "0.5"
+  return (
+    text
+      .replace(/\p{Nd}/gu, toAsciiDigit)
+      // glyph fractions: "1½" -> 1.5, "½" -> 0.5, same for ¼ and ¾
+      .replace(/(\d)\s*½/g, "$1.5")
+      .replace(/(\d)\s*¼/g, "$1.25")
+      .replace(/(\d)\s*¾/g, "$1.75")
+      .replace(/½/g, "0.5")
+      .replace(/¼/g, "0.25")
+      .replace(/¾/g, "0.75")
+      // written fractions: "1 1/2" -> 1.5, "1/2" -> 0.5 (only 1/2, 1/4, 3/4 so dates and BP like 120/80 are untouched)
+      .replace(/(?<![\d/])(\d+)\s+1\/2(?![\d/])/g, "$1.5")
+      .replace(/(?<![\d/])(\d+)\s+1\/4(?![\d/])/g, "$1.25")
+      .replace(/(?<![\d/])(\d+)\s+3\/4(?![\d/])/g, "$1.75")
+      .replace(/(?<![\d/.])1\/2(?![\d/])/g, "0.5")
+      .replace(/(?<![\d/.])1\/4(?![\d/])/g, "0.25")
+      .replace(/(?<![\d/.])3\/4(?![\d/])/g, "0.75")
+  );
 }
 
 /**

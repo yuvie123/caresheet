@@ -28,6 +28,7 @@ Rules:
 - Extract every medication mentioned, including ones the sheet says to STOP (status "stop"). Use the sheet's own sections to set status.
 - source_quote must be copied character-for-character from your transcript: the shortest span that contains both the medication name and its strength. It may cross a line break (pill-bottle labels often put the brand, ingredient and strength on separate lines).
 - name: copy the name as written in that document. Do not add an ingredient in brackets.
+- For a range such as "1 to 2 tablets", set dose_amount to null (never pick one end); for "half a tablet" or "1/2 tablet" use 0.5.
 - Never fill a gap with a typical dose, frequency, or time. If something is missing, smudged, illegible, or ambiguous, set that field to null and add an ask_pharmacist item quoting the text.
 - Add ask_pharmacist items for: the same drug listed twice with different doses (conflict); a pill bottle whose dose differs from the discharge sheet (mismatch); anything you cannot read (illegible); tapers or schedules that are hard to follow (unclear).
 - Suggested slots: map "once daily" to morning unless the sheet says otherwise, "twice daily" to morning and evening, "three times daily" to morning, noon and evening, "at bedtime" to bedtime. As-needed medications get no slots.

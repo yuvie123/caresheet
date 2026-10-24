@@ -214,3 +214,57 @@ describe("automatic pharmacist cards", () => {
     expect(verifyPlan(p).ask_pharmacist).toHaveLength(1);
   });
 });
+
+describe("fractions, ranges and number words in dose amounts", () => {
+  const one = (text: string, over: Partial<Medication>) => {
+    const p = plan([]);
+    p.transcript = [{ doc_index: 0, text }];
+    p.medications = [med({ name: "Lisinopril", strength: "10 mg", dose_unit: "tablet", source_quote: text, ...over })];
+    return verifyPlan(p);
+  };
+  it("rejects dose 1 when the papers say 1/2 tablet, accepts 0.5", () => {
+    const t = "Lisinopril 10 mg - take 1/2 tablet by mouth daily.";
+    expect(one(t, { dose_amount: 1, frequency_verbatim: "daily" }).verified_medications).toHaveLength(0);
+    expect(one(t, { dose_amount: 0.5, frequency_verbatim: "daily" }).verified_medications).toHaveLength(1);
+  });
+  it("reads 1 1/2 and half-tablet wording", () => {
+    expect(one("Lisinopril 10 mg - take 1 1/2 tablets by mouth daily.", { dose_amount: 1.5, frequency_verbatim: "daily" }).verified_medications).toHaveLength(1);
+    expect(one("Lisinopril 10 mg - take half a tablet by mouth daily.", { dose_amount: 0.5, frequency_verbatim: "daily" }).verified_medications).toHaveLength(1);
+  });
+  it("rejects a single number picked from a range, accepts null", () => {
+    const t = "Lisinopril 10 mg - take 1 to 2 tablets by mouth daily.";
+    const bad = one(t, { dose_amount: 2, frequency_verbatim: "daily" });
+    expect(bad.verified_medications).toHaveLength(0);
+    expect(bad.failures[0].reason).toMatch(/range/);
+    expect(one(t, { dose_amount: null, frequency_verbatim: "daily" }).verified_medications).toHaveLength(1);
+  });
+  it("does not mistake 'every 4-6 hours' for a dose range", () => {
+    expect(one("Lisinopril 10 mg - take 1 tablet every 4-6 hours.", { dose_amount: 1, frequency_verbatim: "every 4 to 6 hours" }).verified_medications).toHaveLength(1);
+  });
+  it("accepts number words next to the unit, but not 'two weeks'", () => {
+    expect(one("Lisinopril 10 mg - take two tablets by mouth daily.", { dose_amount: 2, frequency_verbatim: "daily" }).verified_medications).toHaveLength(1);
+    expect(one("Lisinopril 10 mg - take one tablet daily. See your doctor in two weeks.", { dose_amount: 2, frequency_verbatim: "daily" }).verified_medications).toHaveLength(0);
+  });
+});
+
+describe("a neighbouring medicine's line is not this medicine's evidence", () => {
+  const sheet = [
+    "- Metformin 500 mg - take 1 tablet by mouth twice daily with breakfast and",
+    "dinner.",
+    "- Acetaminophen 500 mg - take 1 to 2 tablets by mouth every 6 hours as needed.",
+    "- Lisinopril 10 mg - take one tablet daily.",
+  ].join("\n");
+  const run = (m: Partial<Medication>) => {
+    const p = plan([]);
+    p.transcript = [{ doc_index: 0, text: sheet }];
+    p.medications = [med({ name: "Metformin", strength: "500 mg", dose_amount: 1, frequency_verbatim: "twice daily", source_quote: "Metformin 500 mg - take 1 tablet by mouth twice daily with breakfast and dinner.", ...m })];
+    return verifyPlan(p);
+  };
+  it("does not pin the next medicine's range on this one", () => {
+    expect(run({}).verified_medications).toHaveLength(1);
+  });
+  it("does not let a number from the next medicine's line count as this medicine's", () => {
+    // Claude invents 2 tablets of metformin; "2 tablets" only appears in the acetaminophen line.
+    expect(run({ dose_amount: 2, source_quote: "Metformin 500 mg - take" }).verified_medications).toHaveLength(0);
+  });
+});

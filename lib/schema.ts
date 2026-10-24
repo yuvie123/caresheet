@@ -7,7 +7,7 @@ export const SLOTS = ["morning", "noon", "evening", "bedtime"] as const;
 export const Medication = z.object({
   name: z.string().describe("Medication name exactly as written, e.g. 'Metoprolol tartrate'"),
   strength: z.string().nullable().describe("Strength as written, e.g. '25 mg'. null if not stated"),
-  dose_amount: z.number().nullable().describe("How many units per dose, e.g. 1 for '1 tablet'. null if not stated"),
+  dose_amount: z.number().nullable().describe("How many units per dose, e.g. 1 for '1 tablet', 0.5 for half a tablet. null if not stated OR if the papers give a range such as '1 to 2 tablets'"),
   dose_unit: z.string().nullable().describe("Unit of one dose, e.g. 'tablet', 'puff', 'mL'. null if not stated"),
   frequency_verbatim: z.string().describe("Frequency exactly as written, e.g. 'twice daily'"),
   times_per_day: z.number().int().nullable().describe("Doses per day if the sheet makes it unambiguous, else null"),

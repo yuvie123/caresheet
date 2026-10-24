@@ -66,14 +66,43 @@ export function quoteIsGrounded(quote: string, transcript: string, threshold = 0
   return extractNumbers(quote).every((n) => have.has(n));
 }
 
-/** True if `n` appears as a number in `text`, or n is 1 and the text says "one/a/an <unit>". */
+const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+
+function unitStem(unit: string | null): string | null {
+  const stem = (unit ?? "").toLowerCase().replace(/s$/, "").replace(/[^a-z]/g, "");
+  return stem || null;
+}
+
+/**
+ * True if `n` appears as a number in `text`, or is written as a word right before the dose unit:
+ * "one/a/an tablet", "two tablets", "half a tablet". Anchored to the unit so the "a" in "twice a day"
+ * and the "two" in "two weeks" don't count.
+ */
 function hasNumber(n: string, text: string, unit: string | null): boolean {
   if (extractNumbers(text).includes(n)) return true;
-  if (n !== "1" || !unit) return false;
-  const stem = unit.toLowerCase().replace(/s$/, "").replace(/[^a-z]/g, "");
+  const stem = unitStem(unit);
   if (!stem) return false;
-  // "one tablet", "a capsule", "one extended-release tablet"; but NOT the "a" in "twice a day".
-  return new RegExp(`\\b(one|a|an|single)\\s+(?:[a-z-]+\\s+)?${stem}`, "i").test(text);
+  const u = `(?:[a-z-]+\\s+)?${stem}`;
+  if (n === "1" && new RegExp(`\\b(one|a|an|single)\\s+${u}`, "i").test(text)) return true;
+  const i = Number(n);
+  if (Number.isInteger(i) && i >= 2 && i <= 12 && new RegExp(`\\b${WORDS[i]}\\s+${u}`, "i").test(text)) return true;
+  if (n === "0.5" && new RegExp(`\\b(half|one[- ]half)\\s+(?:of\\s+)?(?:a\\s+|an\\s+)?${u}`, "i").test(text)) return true;
+  return false;
+}
+
+/**
+ * A range written next to the dose unit ("1 to 2 tablets", "1-2 caplets", "1 or 2 tablets"). A single
+ * dose_amount can't represent it, and picking one end is a dosing decision CareSheet must not make.
+ */
+function doseRangeNear(med: Medication, texts: string[]): string | null {
+  const stem = unitStem(med.dose_unit);
+  const unit = stem ? `(?:[a-z-]+\\s+)?${stem}` : "(?:tablet|capsule|caplet|pill|puff|drop|spray|patch|ml|unit|teaspoon|tsp|tablespoon|tbsp)";
+  const re = new RegExp(`(\\d+(?:\\.\\d+)?)\\s*(?:to|-|–|—|or)\\s*(\\d+(?:\\.\\d+)?)\\s+${unit}`, "i");
+  for (const t of texts) {
+    const m = normalizeDigits(t).match(re);
+    if (m) return `${m[1]} to ${m[2]}`;
+  }
+  return null;
 }
 
 /** Every number shown to the family for this medicine. */
@@ -100,6 +129,37 @@ export function doseNumbersInQuote(med: Medication): boolean {
  * increased. Now take 40 mg" and pill labels with the brand, strength and directions on separate lines,
  * but rejects a number that only appears somewhere else (e.g. "follow up in 2 weeks").
  */
+const STRENGTH = /\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|g|ml|units?|iu|meq|%)\b/i;
+const LIST_MARKER = /^\s*(?:[-•*·–—]|\d+[.)]\s)/;
+
+/**
+ * The text that belongs to the medicine named on line `i`: that line plus up to `extra` following lines,
+ * stopping at the next list item or at any line carrying its own strength (a different medicine). Keeps
+ * "Metformin ... with breakfast and / dinner." together but not Metformin + the Acetaminophen line below,
+ * while still joining a pill label's brand line to the strength and directions lines under it.
+ */
+function medicineBlock(lines: string[], i: number, extra: number): string {
+  let text = lines[i];
+  for (let k = 1; k <= extra && i + k < lines.length; k++) {
+    const next = lines[i + k];
+    if (!next.trim() || LIST_MARKER.test(next)) break;
+    if (STRENGTH.test(text) && STRENGTH.test(next)) break;
+    text += " " + next;
+  }
+  return text;
+}
+
+/** The block of text for each place the medicine is named. */
+function linesNaming(med: Medication, doc: string): string[] {
+  const lines = doc.split(/\r?\n/);
+  const words = normalizeForMatch(med.name).split(" ").filter((w) => w.length > 2);
+  const out: string[] = [];
+  lines.forEach((l, i) => {
+    if (words.some((w) => normalizeForMatch(l).includes(w))) out.push(medicineBlock(lines, i, 2));
+  });
+  return out;
+}
+
 export function numbersGrounded(med: Medication, matchedQuote: string, doc: string): boolean {
   const required = requiredNumbers(med);
   const lines = doc.split(/\r?\n/);
@@ -109,8 +169,8 @@ export function numbersGrounded(med: Medication, matchedQuote: string, doc: stri
     const line = normalizeForMatch(lines[i]);
     if (!nameWords.some((w) => line.includes(w))) continue;
     windows.push({
-      strength: `${matchedQuote} ${lines[i]} ${lines[i + 1] ?? ""}`,
-      other: `${matchedQuote} ${lines[i]} ${lines[i + 1] ?? ""} ${lines[i + 2] ?? ""}`,
+      strength: `${matchedQuote} ${medicineBlock(lines, i, 1)}`,
+      other: `${matchedQuote} ${medicineBlock(lines, i, 2)}`,
     });
   }
   return windows.some((w) =>
@@ -148,6 +208,8 @@ export function verifyPlan(plan: Plan): VerifiedPlan {
     if (!med.source_quote.trim()) reason = "no source sentence was given";
     else if (!inDoc && !quoteIsGrounded(med.source_quote, fullTranscript))
       reason = "the quoted sentence could not be found in the documents";
+    else if (med.dose_amount !== null && doseRangeNear(med, [matched ?? "", ...linesNaming(med, inDoc ? doc : fullTranscript)]))
+      reason = `the papers give a range (${doseRangeNear(med, [matched ?? "", ...linesNaming(med, inDoc ? doc : fullTranscript)])}), so CareSheet won't pick one number`;
     else if (!numbersGrounded(med, matched ?? "", inDoc ? doc : fullTranscript))
       reason = "the dose numbers do not appear next to this medicine in the documents";
     else if (!quoteIsGrounded(med.name, med.source_quote, 0.5) && !quoteIsGrounded(med.name, fullTranscript, 0.5))
