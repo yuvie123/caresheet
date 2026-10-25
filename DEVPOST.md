@@ -1,14 +1,14 @@
 # Devpost submission draft
 
-Copy each section into the matching Devpost field. Replace anything in <!-- comments -->.
+Copy each section into the matching Devpost field. Solo entry: built by Yuvraj.
 
 **Project name:** CareSheet
 
 **Tagline (max ~200 chars):** Hospital discharge papers and the pill bottles at home, turned into a verified weekly medicine plan and a bilingual fridge sheet. Claude reads; code checks every dose.
 
-**Tracks to select:** Anthropic: Claude for Public Benefit · Cal Hacks: Best People-First Social Impact Hack · Microsoft: Built for the Real World · Meta: Bringing People Closer Together with AI · MLH: Commit Fellowship (also submit their supplemental form) · Hacker's Choice
+**Tracks to select (also tick Best Solo Hack and Best Beginner Hack if eligible):** Anthropic: Claude for Public Benefit · Cal Hacks: Best People-First Social Impact Hack · Microsoft: Built for the Real World · Meta: Bringing People Closer Together with AI · MLH: Commit Fellowship (also submit their supplemental form) · Hacker's Choice
 
-**Links:** Live app https://caresheet.vercel.app · Finished example https://caresheet.vercel.app/?example · Code https://github.com/yuvie123/caresheet · Video <!-- VIDEO_URL -->
+**Links:** Live app https://caresheet.vercel.app · Finished example https://caresheet.vercel.app/?example · Code https://github.com/yuvie123/caresheet · Video: add the YouTube link here once it is uploaded
 
 ---
 
@@ -17,8 +17,6 @@ Copy each section into the matching Devpost field. Replace anything in <!-- comm
 Picture the evening a parent comes home from hospital. The discharge papers run to several pages of clinical English: two new medicines, one changed dose, two to stop. The kitchen cabinet still holds the old bottles, one under a brand name that hides the fact it is the same drug as something on the new list. The parent reads Punjabi, not English, so every instruction has to pass through a tired son or daughter who is also trying to work out which pills go where, and when. (This is an illustrative scenario, not a specific family.)
 
 That ordinary evening is where doses get doubled and stopped medicines quietly keep being taken. About one in five medical patients has an adverse event in the first weeks after discharge, and about two thirds of those are drug-related. We built CareSheet for that evening: a plan every line of which traces back to the hospital's own words, with anything uncertain handed to the pharmacist instead of guessed, and a sheet for the fridge in the parent's language.
-
-<!-- Optional: if a teammate has a true personal experience and is happy to share it, add one real sentence here. Do not add one that is not true. -->
 
 ## What it does
 
